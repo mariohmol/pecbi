@@ -1,0 +1,159 @@
+
+
+IF  '$(vPontuacaoCalculo)'='T' THEN
+
+	DIRECTORY;
+	$(Must_Include=QVS\Deputado\Federal\PontuacaoMaxMin.qvs);
+
+	
+	 
+	//Juntamos os maximos aos registros das candidaturas por rodada
+	ExpPontuacao:
+	load *,
+	
+	//MAX
+	
+	ApplyMap('MapTotaisTotalPresenca',ExpPontuacao.SemanaAno,0) as ExpPontuacao.MaxTotalPresenca ,
+	ApplyMap('MapTotaisUltimoPresenca',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxUltimoPresenca,
+	//ApplyMap('MapTotaisTendenciaPresenca',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxTendenciaPresenca,
+	
+	ApplyMap('MapTotaisTotalProposicao',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxTotalProposicao,
+	ApplyMap('MapTotaisUltimoProposicao',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxUltimoProposicao,
+	//ApplyMap('MapTotaisTendenciaProposicao',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxTendenciaProposicao,
+	
+	ApplyMap('MapTotaisTotalDespesa',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxTotalDespesa,
+	ApplyMap('MapTotaisUltimoDespesa',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxUltimoDespesa,
+	//ApplyMap('MapTotaisTendenciaDespesa',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxTendenciaDespesa,
+	
+	ApplyMap('MapTotaisTotalVotacao',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxTotalVotacao,
+	ApplyMap('MapTotaisUltimoVotacao',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxUltimoVotacao,
+	//ApplyMap('MapTotaisTendenciaVotacao',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxTendenciaVotacao,
+
+	ApplyMap('MapTotaisTotalProcesso',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxTotalProcesso,
+	ApplyMap('MapTotaisUltimoProcesso',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxUltimoProcesso,
+	//ApplyMap('MapTotaisTendenciaProcesso',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MaxTendenciaProcesso,
+	
+	
+	//MIN			
+	ApplyMap('MapTotaisTotalMinPresenca',ExpPontuacao.SemanaAno,0) as ExpPontuacao.MinTotalPresenca,
+	ApplyMap('MapTotaisUltimoMinPresenca',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinUltimoPresenca,
+	//ApplyMap('MapTotaisTendenciaMinPresenca',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinTendenciaPresenca,
+	
+	ApplyMap('MapTotaisTotalMinProposicao',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinTotalProposicao,
+	ApplyMap('MapTotaisUltimoMinProposicao',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinUltimoProposicao,
+	//ApplyMap('MapTotaisTendenciaMinProposicao',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinTendenciaProposicao,
+	
+	ApplyMap('MapTotaisTotalMinDespesa',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinTotalDespesa,
+	ApplyMap('MapTotaisUltimoMinDespesa',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinUltimoDespesa,
+	//ApplyMap('MapTotaisTendenciaMinDespesa',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinTendenciaDespesa,
+	
+	ApplyMap('MapTotaisTotalMinVotacao',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinTotalVotacao,
+	ApplyMap('MapTotaisUltimoMinVotacao',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinUltimoVotacao,
+	//ApplyMap('MapTotaisTendenciaMinVotacao',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinTendenciaVotacao,
+
+	ApplyMap('MapTotaisTotalMinProcesso',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinTotalProcesso,
+	ApplyMap('MapTotaisUltimoMinProcesso',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinUltimoProcesso
+	//ApplyMap('MapTotaisTendenciaMinProcesso',ExpPontuacao.SemanaAno,0) as  ExpPontuacao.MinTendenciaProcesso
+
+	
+
+	from qvd\transformador\ExpPontuacao.qvd (qvd);
+
+	
+	store ExpPontuacao into qvd\transformador\ExpPontuacaoMaxMin.qvd (qvd);
+	
+	
+
+	NoConcatenate
+	
+	
+	//Fazemos os calculos dos pontos considerando o valor do deputado na rodada e o maximo, alem do peso de cada fator (presenca, proposicao..)
+	ExpPontuacaoTotalMaxMinRangeTotal:
+	load *,
+	(ExpPontuacao.MaxUltimoPresenca - ExpPontuacao.MinUltimoPresenca) as ExpPontuacao.RangePresenca,
+	(ExpPontuacao.MaxUltimoProposicao - ExpPontuacao.MinUltimoProposicao) as ExpPontuacao.RangeProposicao,
+	 (ExpPontuacao.MaxUltimoDespesa - ExpPontuacao.MinUltimoDespesa) as ExpPontuacao.RangeDespesa,
+	 (ExpPontuacao.MaxUltimoVotacao - ExpPontuacao.MinUltimoVotacao) as ExpPontuacao.RangeVotacao,
+	 (ExpPontuacao.MaxUltimoProcesso - ExpPontuacao.MinUltimoProcesso)  as ExpPontuacao.RangeProcesso
+	 Resident ExpPontuacao;
+	 
+	 NoConcatenate
+	 
+	ExpPontuacaoTotalMaxMinTotal:
+	load *,
+	
+		(
+			(
+		
+				if ( IsNull(ExpPontuacao.UltimoPresenca), ExpPontuacao.MinUltimoPresenca, ExpPontuacao.UltimoPresenca)
+				- ExpPontuacao.MinUltimoPresenca
+			)
+			/
+				if ( IsNull(ExpPontuacao.RangePresenca), 0, ExpPontuacao.RangePresenca)
+		) as ExpPontuacao.PontoPresenca,
+				
+		
+		(
+			(
+			if ( IsNull(ExpPontuacao.UltimoProposicao), ExpPontuacao.MinUltimoProposicao, ExpPontuacao.UltimoProposicao)
+			- ExpPontuacao.MinUltimoProposicao)/ExpPontuacao.RangeProposicao
+		) as ExpPontuacao.PontoProposicao,
+		
+		
+		
+		(
+			(
+			if ( IsNull(ExpPontuacao.UltimoDespesa), ExpPontuacao.MinUltimoDespesa, ExpPontuacao.UltimoDespesa)
+			- ExpPontuacao.MinUltimoDespesa)/ExpPontuacao.RangeDespesa
+		) as ExpPontuacao.PontoDespesa,
+		
+		
+		
+		(
+			(
+			if ( IsNull(ExpPontuacao.UltimoVotacao), ExpPontuacao.MinUltimoVotacao, ExpPontuacao.UltimoVotacao)
+			- ExpPontuacao.MinUltimoVotacao)/ExpPontuacao.RangeVotacao
+		) as ExpPontuacao.PontoVotacao,
+		
+		
+		(
+			(
+			if ( IsNull(ExpPontuacao.UltimoProcesso), ExpPontuacao.MinUltimoProcesso, ExpPontuacao.UltimoProcesso) 
+			- ExpPontuacao.MinUltimoProcesso)/ExpPontuacao.RangeProcesso
+		) as ExpPontuacao.PontoProcesso
+
+		
+	Resident ExpPontuacaoTotalMaxMinRangeTotal;
+	
+	store ExpPontuacaoTotalMaxMinTotal into qvd\transformador\ExpPontuacaoTotalMaxMinTotal.qvd (qvd);
+	 
+	 	
+	NoConcatenate
+	
+	ExpPontuacaoTotalFinal:
+	//+			if ( IsNull(ExpPontuacao.PontoProcesso), 0, ExpPontuacao.PontoProcesso) *$(pesoProcesso)	
+	load 
+		*,	
+		(	
+			if ( IsNull(ExpPontuacao.PontoPresenca), 0, ExpPontuacao.PontoPresenca) *$(pesoPresenca) 	+		
+			if ( IsNull(ExpPontuacao.PontoProposicao), 0, ExpPontuacao.PontoProposicao)*$(pesoProposicao)	+
+			if ( IsNull(ExpPontuacao.PontoDespesa), 0, ExpPontuacao.PontoDespesa) *$(pesoDespesa) 	+	
+			if ( IsNull(ExpPontuacao.PontoVotacao), 0, ExpPontuacao.PontoVotacao)*$(pesoVotacao) 	
+				
+		)*10 as ExpPontuacao.Pontuacao
+				
+	 Resident ExpPontuacaoTotalMaxMinTotal;
+		
+		
+		
+	 //Guarda todo o historico de pontuacoes para exibicao de graficos
+	store ExpPontuacaoTotalFinal into [qvd\transformador\ExpPontuacaoTotal.qvd];
+	
+	drop table ExpPontuacao;
+	drop table ExpPontuacaoTotal;	
+	drop table ExpPontuacaoTotalFinal;	
+	drop table ExpPontuacaoTotalMaxMinTotal;
+
+	
+ENDIF
+

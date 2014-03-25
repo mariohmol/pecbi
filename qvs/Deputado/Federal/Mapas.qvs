@@ -1,0 +1,53 @@
+
+
+ChrMap:
+MAPPING
+LOAD * INLINE [
+    From,           To
+    á,                     a
+    â,                     a
+    ã,                    a
+    é,                     e
+    ê,                     e
+    í,                     i
+    ó,                     o
+    ô,                     o
+    õ,                    o
+    ú,                     u
+    Á,                     A
+    Â,                     A
+    Ã,                    A
+    É,                     E
+    Ê,                     E
+    Í,                     I
+    Ó,                     O
+    Ô,                     O
+    Õ,                    O
+    Ú,                     U
+    ç,                    c
+    Ç,                    c
+];
+
+NomeDiferente:
+MAPPING
+LOAD * INLINE [
+    From,           To
+'BENEDITO DE LIRA', 'BENEDITO DE LIRA'
+'JOSE RENAN VASCONCELOS CALHEIROS','JOSE RENAN VASCONCELOS CALHEIROS FILHO'
+];
+
+ProposicaoChrMap:
+MAPPING
+LOAD * INLINE [
+From,           To
+'/',                    ''
+];
+
+
+ProcessoIdMap:
+MAPPING
+LOAD * INLINE [
+	From,           To
+'.', ''
+'/',''
+];

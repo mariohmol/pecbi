@@ -1,0 +1,199 @@
+ChrMap:
+MAPPING
+LOAD * INLINE [
+    From,           To
+    á,                     a
+    â,                     a
+    ã,                    a
+    é,                     e
+    ê,                     e
+    í,                     i
+    ó,                     o
+    ô,                     o
+    õ,                    o
+    ú,                     u
+    Á,                     A
+    Â,                     A
+    Ã,                    A
+    É,                     E
+    Ê,                     E
+    Í,                     I
+    Ó,                     O
+    Ô,                     O
+    Õ,                    O
+    Ú,                     U
+    ç,                    c
+    Ç,                    c
+];
+
+NomeDiferente:
+MAPPING
+LOAD * INLINE [
+    From,           To
+'BENEDITO DE LIRA', 'BENEDITO DE LIRA'
+'JOSE RENAN VASCONCELOS CALHEIROS','JOSE RENAN VASCONCELOS CALHEIROS FILHO'
+];
+
+IF  '$(vTransformacao)'='T' THEN
+
+	DataPadraoMesDescIngles:
+	Mapping load * INLINE [
+		'Mes','Valor'
+		'-JAN-','/01/19'
+		'-FEB-','/02/19'
+		'-MAR-','/03/19'
+		'-APR-','/04/19'
+		'-MAY-','/05/19'
+		'-JUN-','/06/19'
+		'-JUL-','/07/19'
+		'-AUG-','/08/19'
+		'-SEP-','/09/19'
+		'-OCT-','/10/19'
+		'-NOV-','/11/19'
+		'-DEC-','/12/19'
+		];
+
+	Candidaturas:
+		LOAD *
+			/*DATA_GERACAO as Candidaturas.DATA_GERACAO,
+			HORA_GERACAO as Candidaturas.HORA_GERACAO,
+			ANO_ELEICAO as Candidaturas.ANO_ELEICAO,
+			NUM_TURNO as Candidaturas.NUM_TURNO,
+			DESCRICAO_ELEICAO as Candidaturas.DESCRICAO_ELEICAO,
+			SIGLA_UF as Candidaturas.SIGLA_UF,
+			SIGLA_UE as Candidaturas.SIGLA_UE,
+			DESCRICAO_UE as Candidaturas.DESCRICAO_UE,
+			CODIGO_CARGO as Candidaturas.CODIGO_CARGO,
+			DESCRICAO_CARGO as Candidaturas.DESCRICAO_CARGO,
+			MapSubString('ChrMap',NOME_CANDIDATO) as NOME_CANDIDATO,
+			SEQUENCIAL_CANDIDATO as Candidaturas.SEQUENCIAL_CANDIDATO,
+			NUMERO_CANDIDATO as Candidaturas.NUMERO_CANDIDATO,
+			NOME_URNA_CANDIDATO as Candidaturas.NOME_URNA_CANDIDATO,
+			COD_SITUACAO_CANDIDATURA as Candidaturas.COD_SITUACAO_CANDIDATURA,
+			DES_SITUACAO_CANDIDATURA as Candidaturas.DES_SITUACAO_CANDIDATURA,
+			NUMERO_PARTIDO as Candidaturas.NUMERO_PARTIDO,
+			SIGLA_PARTIDO as Candidaturas.SIGLA_PARTIDO,
+			NOME_PARTIDO as Candidaturas.NOME_PARTIDO,
+			CODIGO_LEGENDA as Candidaturas.CODIGO_LEGENDA,
+			SIGLA_LEGENDA as Candidaturas.SIGLA_LEGENDA,
+			COMPOSICAO_LEGENDA as Candidaturas.COMPOSICAO_LEGENDA,
+			NOME_LEGENDA as Candidaturas.NOME_LEGENDA,
+			CODIGO_OCUPACAO as Candidaturas.CODIGO_OCUPACAO,
+			DESCRICAO_OCUPACAO as Candidaturas.DESCRICAO_OCUPACAO,
+			MapSubString('DataPadraoMesDescIngles',DATA_NASCIMENTO) as Candidaturas.DATA_NASCIMENTO,
+			NUM_TITULO_ELEITORAL_CANDIDATO as Candidaturas.NUM_TITULO_ELEITORAL_CANDIDATO,
+			IDADE_DATA_ELEICAO as Candidaturas.IDADE_DATA_ELEICAO,
+			CODIGO_SEXO as Candidaturas.CODIGO_SEXO,
+			DESCRICAO_SEXO as Candidaturas.DESCRICAO_SEXO,
+			COD_GRAU_INSTRUCAO as Candidaturas.COD_GRAU_INSTRUCAO,
+			DESCRICAO_GRAU_INSTRUCAO as Candidaturas.DESCRICAO_GRAU_INSTRUCAO,
+			CODIGO_ESTADO_CIVIL as Candidaturas.CODIGO_ESTADO_CIVIL,
+			DESCRICAO_ESTADO_CIVIL as Candidaturas.DESCRICAO_ESTADO_CIVIL,
+			CODIGO_NACIONALIDADE as Candidaturas.CODIGO_NACIONALIDADE,
+			DESCRICAO_NACIONALIDADE as Candidaturas.DESCRICAO_NACIONALIDADE,
+			SIGLA_UF_NASCIMENTO as Candidaturas.SIGLA_UF_NASCIMENTO,
+			CODIGO_MUNICIPIO_NASCIMENTO as Candidaturas.CODIGO_MUNICIPIO_NASCIMENTO,
+			NOME_MUNICIPIO_NASCIMENTO as Candidaturas.NOME_MUNICIPIO_NASCIMENTO,
+			DESPESA_MAX_CAMPANHA as Candidaturas.DESPESA_MAX_CAMPANHA,
+			COD_SIT_TOT_TURNO as Candidaturas.COD_SIT_TOT_TURNO,
+			DESC_SIT_TOT_TURNO as Candidaturas.DESC_SIT_TOT_TURNO*/
+	  FROM qvd\extrator\Candidaturas.qvd (qvd);
+	
+	
+
+	Presenca:
+	load *,UPPER(Politico) as TituloPolitico  FROM qvd\extrator\resultadoPresenca-*.qvd (qvd);
+
+	
+	deputadoT:
+	load *  FROM qvd\extrator\deputado.qvd (qvd);
+	
+	Deputados:
+	load *,nomeParlamentar&'-'&partido&'/'&uf as TituloPolitico, MapSubString('ChrMap',nome) as NOME_CANDIDATO  resident deputadoT;
+	
+	drop table deputadoT;
+	
+	store Candidaturas into [qvd\transformador\Candidaturas.qvd];
+	store Deputados into [qvd\transformador\Deputados.qvd];
+	store Presenca into [qvd\transformador\Presenca.qvd];
+	
+	drop table Candidaturas;
+	drop table Deputados;
+	drop table Presenca;
+
+	Proposicao:
+	LOAD 
+
+		id as Proposicao.Id,
+		nomePolitico as Proposicao.nomePolitico,
+		numero as Proposicao.numero,
+		ano as Proposicao.ano,
+		datApresentacao as Proposicao.datApresentacao,
+		txtEmenta as Proposicao.txtEmenta,
+		txtExplicacaoEmenta as Proposicao.txtExplicacaoEmenta,
+		qtdAutores as Proposicao.qtdAutores,
+		indGenero as Proposicao.indGenero,
+		qtdOrgaosComEstado as Proposicao.qtdOrgaosComEstado,
+		
+		//[situacao/
+		[situacao/id] as Proposicao.situacao,
+		descricao as Proposicao.descricao,
+		codProposicaoPrincipal as Proposicao.codProposicaoPrincipal,
+		proposicaoPrincipal as Proposicao.proposicaoPrincipal,
+		codOrgaoEstado as Proposicao.codOrgaoEstado,
+		siglaOrgaoEstado as Proposicao.siglaOrgaoEstado,
+		//[situacao/
+		
+		//[ultimoDespacho/
+		datDespacho as Proposicao.datDespacho,
+		txtDespacho as Proposicao.txtDespacho,
+		//[ultimoDespacho/
+		
+		//[autor1/
+		txtNomeAutor as Proposicao.txtNomeAutor,
+		ideCadastro,
+		codPartido as Proposicao.codPartido,
+		txtSiglaPartido as Proposicao.txtSiglaPartido,
+		txtSiglaUF as Proposicao.txtSiglaUF,
+		//[autor1/
+		
+		//[apreciacao/
+		[apreciacao/id] as Proposicao.apreciacaoId,
+		txtApreciacao as Proposicao.txtApreciacao,
+		//[apreciacao/
+		
+		//[regime/
+		codRegime as Proposicao.codRegime,
+		txtRegime as Proposicao.txtRegime,
+		//[regime/
+		
+		//[orgaoNumerador/
+		[orgaoNumerador/id] as Proposicao.orgaoNumeradorId,
+		[orgaoNumerador/sigla] as Proposicao.orgaoNumeradorSigla,
+		[orgaoNumerador/nome] as Proposicao.orgaoNumeradorNome,
+		//[orgaoNumerador/
+		
+		
+		//[tipoProposicao/
+		//[tipoProposicao/id] as Proposicao.tipoProposicaoId,
+		[tipoProposicao/sigla] as TipoProposicao.tipoSigla
+		//[tipoProposicao/nome] as Proposicao.tipoProposicaoNome
+		//[tipoProposicao/
+	FROM qvd\extrator\ProposicaoCompleta-*.qvd (qvd);
+	
+	store Proposicao into [qvd\transformador\Proposicao.qvd];
+	
+	
+	
+	// Start of [ListarSiglasTipoProposicao.asmx/listarsiglastipoproposicao] LOAD statements
+	TipoProposicao:
+	LOAD *
+	FROM qvd\extrator\TipoProposicao.qvd (qvd);
+
+	store TipoProposicao into [qvd\transformador\TipoProposicao.qvd];
+	// End of [ListarSiglasTipoProposicao.asmx/listarsiglastipoproposicao] LOAD statements
+	
+ENDIF
+
+
+	

@@ -1,0 +1,463 @@
+
+IF  '$(vExtracaoAnual)'='T' THEN
+	
+		
+	let vDays = num#(fim - inicio);
+	
+	
+	//EXTRACAO OBTER DEPUTADOS
+	//http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDeputados
+	deputado:
+	LOAD ideCadastro,
+	    matricula,
+	    idParlamentar,
+	    nome,
+	    nomeParlamentar,
+	    sexo,
+	    uf,
+	    partido,
+	    gabinete,
+	    anexo,
+	    fone,
+	    email,
+	    %Key_deputado_1F42ADA0BE275A4C    // Key for this table: deputados/deputado
+	FROM [http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDeputados] (XmlSimple, Table is [deputados/deputado]);
+	// End of [ObterDeputados.asmx/obterdeputados] LOAD statements
+	
+	store deputado into [qvd\extrator\deputado.qvd];
+	drop table deputado;
+	
+	
+	
+	//EXTRACAO 
+	//http://www.camara.gov.br/SitCamaraWS/Deputados.asmx
+	// Start of [ObterDeputados.asmx/obterdeputados] LOAD statements - PEGAR NIVEL DE PARTICIPACAO EM COMISSOES
+	//'titular/comissao':
+	//LOAD nome,
+	//    sigla,
+	//    %Key_deputado_1F42ADA0BE275A4C    // Key to parent table: deputados/deputado
+	//FROM [http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDeputados] (XmlSimple, Table is [deputados/deputado/comissoes/titular/comissao]);
+	//
+	//'suplente/comissao':
+	//LOAD nome,
+	//    sigla,
+	//    %Key_deputado_1F42ADA0BE275A4C    // Key to parent table: deputados/deputado
+	//FROM [http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDeputados] (XmlSimple, Table is [deputados/deputado/comissoes/suplente/comissao]);
+	
+		
+
+	COMENTADO PORQUE SAO DADOS ESTATICOS
+	
+	//CANDIDATURAS DO TSE
+	Candidaturas:
+	LOAD @1 as DATA_GERACAO, 
+	     @2 as HORA_GERACAO, 
+	     @3 as ANO_ELEICAO, 
+	     @4 as NUM_TURNO, 
+	     @5 as DESCRICAO_ELEICAO, 
+	     @6 as SIGLA_UF, 
+	     @7 as SIGLA_UE, 
+	     @8 as DESCRICAO_UE, 
+	     @9 as CODIGO_CARGO, 
+	     @10 as DESCRICAO_CARGO, 
+	     @11 as NOME_CANDIDATO, 
+	     @12 as SEQUENCIAL_CANDIDATO, 
+	     @13 as NUMERO_CANDIDATO, 
+	     @14 as NOME_URNA_CANDIDATO, 
+	     @15 as COD_SITUACAO_CANDIDATURA, 
+	     @16 as DES_SITUACAO_CANDIDATURA, 
+	     @17 as NUMERO_PARTIDO, 
+	     @18 as SIGLA_PARTIDO, 
+	     @19 as NOME_PARTIDO, 
+	     @20 as CODIGO_LEGENDA, 
+	     @21 as SIGLA_LEGENDA, 
+	     @22 as COMPOSICAO_LEGENDA, 
+	     @23 as NOME_LEGENDA, 
+	     @24 as CODIGO_OCUPACAO, 
+	     @25 as DESCRICAO_OCUPACAO, 
+	     @26 as DATA_NASCIMENTO, 
+	     @27 as NUM_TITULO_ELEITORAL_CANDIDATO, 
+	     @28 as IDADE_DATA_ELEICAO, 
+	     @29 as CODIGO_SEXO, 
+	     @30 as DESCRICAO_SEXO, 
+	     @31 as COD_GRAU_INSTRUCAO, 
+	     @32 as DESCRICAO_GRAU_INSTRUCAO, 
+	     @33 as CODIGO_ESTADO_CIVIL, 
+	     @34 as DESCRICAO_ESTADO_CIVIL, 
+	     @35 as CODIGO_NACIONALIDADE, 
+	     @36 as DESCRICAO_NACIONALIDADE, 
+	     @37 as SIGLA_UF_NASCIMENTO, 
+	     @38 as CODIGO_MUNICIPIO_NASCIMENTO, 
+	     @39 as NOME_MUNICIPIO_NASCIMENTO, 
+	     @40 as DESPESA_MAX_CAMPANHA, 
+	     @41 as COD_SIT_TOT_TURNO, 
+	     @42 as DESC_SIT_TOT_TURNO
+	FROM cand\consulta_cand_2012\consulta_cand_*_*.txt
+	(txt, codepage is 1252, no labels, delimiter is ';', msq);
+	
+	TRACE --- Exclui os Fatos e Temps ---;
+	//drop table Candidaturas;
+	
+	TRACE --- Carrega o QVD FINAL ---;
+	store Candidaturas into [qvd\extrator\Candidaturas.qvd];
+	
+
+	
+	
+	
+	
+	
+	
+
+	ProposicaoVotadaTmp:
+	load *
+		,
+		
+		SubField(
+				RegExFind([nomeProposicao] , '\w+ ', ';') 
+			,';') as tipo
+		
+		,
+		
+		SubField(
+				MapSubString('ProposicaoChrMap', 
+					RegExFind([nomeProposicao] , '/(\d{4})', ';')
+				) 
+			,';') as ano
+		
+		,
+		
+		SubField(
+				RegExFind([nomeProposicao] , ' \d+', ';') 
+			,';') as id
+	 from [qvd\extrator\ProposicaoVotada-2013.qvd] (qvd);
+
+			
+	NoConcatenate	
+
+	ProposicaoVotada:
+		load distinct 
+		codProposicao as ProposicaoVotada.codProposicao,
+		nomeProposicao as ProposicaoVotada.nomeProposicao,
+		left(tipo,3) as ProposicaoVotada.tipo,
+		ano as ProposicaoVotada.ano,
+		id as ProposicaoVotada.id
+	 resident ProposicaoVotadaTmp where IsNum(ano) and not  IsNum(tipo);
+
+	store ProposicaoVotada into [qvd\extrator\ProposicaoVotada.qvd];
+
+	drop table ProposicaoVotadaTmp;
+	drop table ProposicaoVotada;
+	
+	
+	//Proposicao nao muda com frequencia, portanto nao necessario extrair sempre
+	// Start of [ListarSiglasTipoProposicao.asmx/listarsiglastipoproposicao] LOAD statements
+	TipoProposicao:
+	LOAD tipoSigla,
+		descricao,
+		ativa ,
+		genero 
+	FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarSiglasTipoProposicao] (XmlSimple, Table is [siglas/silga]);
+
+	store TipoProposicao into [qvd\extrator\TipoProposicao.qvd];
+	// End of [ListarSiglasTipoProposicao.asmx/listarsiglastipoproposicao] LOAD statements
+	
+	
+	
+	TRACE --- SituacaoProposicao - Necessário UMa ve  ---;
+	SituacaoProposicao:
+	LOAD id,
+		descricao,
+		ativa
+	FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarSituacoesProposicao] (XmlSimple, Table is [situacaoProposicao/situacaoProposicao]);
+	
+	store SituacaoProposicao into [qvd\extrator\SituacaoProposicao.qvd];
+
+	drop table SituacaoProposicao;
+	
+	
+	
+	
+	set anoText = '2013';
+	// Start of [ListarProposicoesVotadasEmPlenario?ano=2013&tipo=PL.asmx/listarproposicoesvotadasemplenario?ano=2013&tipo=pl] LOAD statements
+	ProposicaoVotada:
+	LOAD codProposicao,
+		nomeProposicao
+	FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarProposicoesVotadasEmPlenario?ano=$(anoText)&tipo=$(text)] (XmlSimple, Table is [proposicoes/proposicao]);
+	// End of [ListarProposicoesVotadasEmPlenario?ano=2013&tipo=PL.asmx/listarproposicoesvotadasemplenario?ano=2013&tipo=pl] LOAD statements
+	
+	store ProposicaoVotada into [qvd\extrator\ProposicaoVotada-$(anoText).qvd];
+	
+	
+
+	
+	
+	set anoText = '2013';
+	
+	ProposicaoVotada:
+	LOAD codProposicao,
+		nomeProposicao
+	FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarProposicoesVotadasEmPlenario?ano=$(anoText)&tipo=$(text)] (XmlSimple, Table is [proposicoes/proposicao]);
+	// End of [ListarProposicoesVotadasEmPlenario?ano=2013&tipo=PL.asmx/listarproposicoesvotadasemplenario?ano=2013&tipo=pl] LOAD statements
+	
+	store ProposicaoVotada into [qvd\extrator\ProposicaoVotada-$(anoText).qvd];
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	ExpCandidaturas:
+	load *  FROM   [qvd\transformador\ExpCandidaturas2010.csv] (txt, utf8, embedded labels, delimiter is ',', msq)
+	where not isnull(ExpCandidaturas.ID);
+
+	
+	//Nao esta sendo utilizado pelo jogo por enquanto
+	TRACE --- PROCESSOS ---;
+	LET rowText = NoOfRows('ExpCandidaturas'); // get the total number of rows in Timeline table	   
+	Set ErrorMode = 0;
+	for i=1 to $(rowText) // loop through every row
+
+		let text = trim(FieldValue('ExpCandidaturas.Nome',$(i))); //get the value for "text" field on each row
+		let id = trim(FieldValue('ExpCandidaturas.ID',$(i))); //get the value for "text" field on each row
+		IF  '$(text)'<>'' THEN
+			
+			
+			//PROCESSOS - DETALHES - VOTAÇÔES
+	
+			trace 'http://www.tse.gov.br/sadJudSadpPush/Pesquisa.do?numVersao=1.6&dataVersao=01-12-2012&acao=pesquisarNomeParte&nomeTribunal=&siglaTribunal=df&tipoPesquisa=divPartes&tipoConsultaProtocolo=sa&nomeParte=$(text)&tipoConsultaNomeParte=in&tipoConsultaNomeAdvogado=in';
+              
+         
+			Processos:        
+			LOAD [Nome da parte], 
+			     [Quant. processos],
+			     '$(text)' as nome,
+			     '$(id)' as id
+			FROM
+			[http://www.tse.gov.br/sadJudSadpPush/Pesquisa.do?numVersao=1.6&dataVersao=01-12-2012&acao=pesquisarNomeParte&nomeTribunal=&siglaTribunal=df&tipoPesquisa=divPartes&tipoConsultaProtocolo=sa&nomeParte=$(text)&tipoConsultaNomeParte=in&tipoConsultaNomeAdvogado=in]
+			(html, codepage is 1252, embedded labels, table is @4);
+
+		
+			trace 'http://www.tse.gov.br/sadJudSadpPush/ExibirProcessosNomeParte.do?nomeParte=$(text)&tipoProcesso=J';
+ 
+			NoConcatenate
+         
+			Processos2:
+			LOAD [Marque os processos que você deseja receber informacões.], 
+			     [Marque os processos que você deseja receber informacões.1], 
+			     [Marque os processos que você deseja receber informacões.2], 
+			     [Marque os processos que você deseja receber informacões.3], 
+			     F5, 
+			     F6, 
+			     F7,
+			     '$(text)' as nome,
+			     '$(id)' as id
+			FROM
+			[http://www.tse.gov.br/sadJudSadpPush/ExibirProcessosNomeParte.do?nomeParte=$(text)&tipoProcesso=J]
+			(html, codepage is 1252, embedded labels, table is @1);
+
+			
+			store Processos into [qvd\extrator\Processos\Processos-$(id).qvd] (qvd);
+			store Processos2 into [qvd\extrator\Processos\Processos2-$(id).qvd] (qvd);
+
+			drop table Processos;
+			drop table Processos2;
+		
+		
+		
+			// DETALHES DEPUTADO
+			comissao:
+			LOAD idOrgaoLegislativoCD,
+				siglaComissao,
+				nomeComissao,
+				condicaoMembro,
+				dataEntrada,
+				dataSaida,
+				%Key_Deputado_44AE59C95113D768    // Key to parent table: Deputados/Deputado
+			FROM [http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDetalhesDeputado?ideCadastro=$(id)&numLegislatura=] (XmlSimple, Table is [Deputados/Deputado/comissoes/comissao]);
+			
+			cargoComissoes:
+			LOAD idOrgaoLegislativoCD,
+				siglaComissao,
+				nomeComissao,
+				idCargo,
+				nomeCargo,
+				dataEntrada,
+				dataSaida,
+				%Key_Deputado_44AE59C95113D768    // Key to parent table: Deputados/Deputado
+			FROM [http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDetalhesDeputado?ideCadastro=$(id)&numLegislatura=] (XmlSimple, Table is [Deputados/Deputado/cargosComissoes/cargoComissoes]);
+			
+			periodoExercicio:
+			LOAD siglaUFRepresentacao,
+				situacaoExercicio,
+				dataInicio,
+				dataFim,
+				idCausaFimExercicio,
+				descricaoCausaFimExercicio,
+				%Key_Deputado_44AE59C95113D768    // Key to parent table: Deputados/Deputado
+			FROM [http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDetalhesDeputado?ideCadastro=$(id)&numLegislatura=] (XmlSimple, Table is [Deputados/Deputado/periodosExercicio/periodoExercicio]);
+			
+			itemHistoricoLider:
+			LOAD idHistoricoLider,
+				idCargoLideranca,
+				descricaoCargoLideranca,
+				numOrdemCargo,
+				dataDesignacao,
+				dataTermino,
+				codigoUnidadeLideranca,
+				siglaUnidadeLideranca,
+				idBlocoPartido,
+				%Key_Deputado_44AE59C95113D768    // Key to parent table: Deputados/Deputado
+			FROM [http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDetalhesDeputado?ideCadastro=$(id)&numLegislatura=] (XmlSimple, Table is [Deputados/Deputado/historicoLider/itemHistoricoLider]);
+			
+			Deputado:
+			LOAD numLegislatura,
+				email,
+				nomeProfissao,
+				dataNascimento,
+				ufRepresentacaoAtual,
+				situacaoNaLegislaturaAtual,
+				ideCadastro,
+				idParlamentarDeprecated,
+				nomeParlamentarAtual,
+				nomeCivil,
+				sexo,
+				[filiacoesPartidarias/filiacaoPartidaria/idPartidoAnterior] as idPartidoAnterior,
+				[filiacoesPartidarias/filiacaoPartidaria/siglaPartidoAnterior] as siglaPartidoAnterior,
+				[filiacoesPartidarias/filiacaoPartidaria/nomePartidoAnterior] as nomePartidoAnterior,
+				[filiacoesPartidarias/filiacaoPartidaria/idPartidoPosterior] as idPartidoPosterior,
+				[filiacoesPartidarias/filiacaoPartidaria/siglaPartidoPosterior] as siglaPartidoPosterior,
+				[filiacoesPartidarias/filiacaoPartidaria/nomePartidoPosterior] as nomePartidoPosterior,
+				[filiacoesPartidarias/filiacaoPartidaria/dataFiliacaoPartidoPosterior] as dataFiliacaoPartidoPosterior,
+				[gabinete/numero] as numero,
+				[gabinete/anexo] as anexo,
+				[gabinete/telefone] as telefone,
+				[partidoAtual/idPartido] as idPartido,
+				[partidoAtual/sigla] as sigla,
+				[partidoAtual/nome] as nome,
+				%Key_Deputado_44AE59C95113D768    // Key for this table: Deputados/Deputado
+			FROM [http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDetalhesDeputado?ideCadastro=$(id)&numLegislatura=] (XmlSimple, Table is [Deputados/Deputado]);
+			// End of [ObterDetalhesDeputado?ideCadastro=141428&numLegislatura=.asmx/obterdetalhesdeputado?idecadastro=141428&numlegislatura=] LOAD statements
+			
+		
+			store Deputado into [qvd\extrator\DetalhesDeputado\DetalhesDeputado-Deputado-$(id).qvd] (qvd);
+			store itemHistoricoLider into [qvd\extrator\DetalhesDeputado\DetalhesDeputado-itemHistoricoLider-$(id).qvd] (qvd);
+			store periodoExercicio into [qvd\extrator\DetalhesDeputado\DetalhesDeputado-periodoExercicio-$(id).qvd] (qvd);
+			store cargoComissoes into [qvd\extrator\DetalhesDeputado\DetalhesDeputado-cargoComissoes-$(id).qvd] (qvd);
+			store comissao into [qvd\extrator\DetalhesDeputado\DetalhesDeputado-comissao-$(id).qvd] (qvd);
+
+			drop table Deputado;
+			drop table itemHistoricoLider;				
+			drop table periodoExercicio;
+			drop table cargoComissoes;				
+			drop table comissao;
+			
+		TRACE --- Politico $(text)  ---;
+		
+		END IF
+	NEXT i
+
+	
+		
+	//PROCESSOS DETALHES COMPLETO
+	LET rowText = NoOfRows('ProcessosAbertos'); // get the total number of rows in Timeline table	   
+	Set ErrorMode = 0;
+	for i=1 to $(rowText) // loop through every row
+
+			 let text = MapSubString('ProcessoIdMap',trim(FieldValue('Processos.Id',$(i)))); //get the value for "text" field on each row
+			 let protocolo = trim(FieldValue('Processos.Id',$(i))); 
+			  let status = MapSubString('ProcessoIdMap',trim(FieldValue('Processos.Status',$(i)))); 
+			 //let text = FieldValue('Processos.Id',$(i));
+			 	TRACE --- Iniciando ProcessosCompleto $(text) $(status) ---;
+			 	let tribunal = 'df';//'tse';
+			IF  '$(text)'<>'' THEN
+			
+			NoConcatenate
+		
+			ProcessosCompleto:
+			LOAD @1 as campo, 
+		     //@2 as c, 
+		     IF(@3=@4,@3,@3 & ' ; ' & @4) as desc,
+		     '$(tribunal)' as tribunal,
+		     '$(text)' as idProcesso,
+		     '$(protocolo)' as protocoloProcesso
+		FROM
+		[http://www.tse.gov.br/sadJudSadpPush/ExibirDadosProcesso.do?nprot=$(text)&comboTribunal=$(tribunal)]
+		(html, codepage is 1252, no labels, table is @1)
+		where @1<>'';
+		
+		store ProcessosCompleto into [qvd\extrator\Processos\ProcessosCompleto-$(text).qvd] (qvd);
+		drop table ProcessosCompleto;
+
+			trace  'http://www.tse.gov.br/sadJudSadpPush/ExibirDadosProcesso.do?nprot=$(text)&comboTribunal=$(tribunal)';
+			
+			IF  '$(i)'='5' THEN
+				//EXIT Script;
+			END IF
+		END IF
+	NEXT i
+ 
+		
+			
+	ProcessosCompleto:
+		load *
+		 from  [qvd\extrator\Processos\ProcessosCompleto-*.qvd] (qvd);
+		store ProcessosCompleto into  [qvd\extrator\Processos\ProcessosCompletoTodos.qvd] (qvd);
+
+	
+
+/*
+PAUTAS DE ORGAO
+LET rowText = NoOfRows('Orgao'); // get the total number of rows in Timeline table	   
+	Set ErrorMode = 0;
+	for i=1 to $(rowText) // loop through every row
+	
+	 let numero = peek('Orgao.id',$(i),'Orgao'); 	  
+	  
+	  trace 'http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ObterProposicao?tipo=$(sigla)&numero=$(numero)&ano=$(ano)';
+	  
+	IF  '$(numero)'<>'' THEN
+	
+			
+			
+		// Start of [2012.asmx/obterpauta?idorgao=2004&datini=01/01/2012&datfim=30/04/2012] LOAD statements
+		PautaProposicao:
+		LOAD sigla,
+		    idProposicao,
+		    ementa,
+		    %Key_reuniao_045908D77223287D    // Key to parent table: pauta/reuniao
+		FROM [http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterPauta?IDOrgao=$(numero)&datIni=$(inicioTexto)&datFim=$(fimTexto)] (XmlSimple, Table is [pauta/reuniao/proposicoes/proposicao]);
+		
+		PautaReuniao:
+		LOAD codReuniao,
+		    data,
+		    horario,
+		    local,
+		    estado,
+		    tipo,
+		    tituloReuniao,
+		    objeto,
+		    %Key_pauta_319BDB27DA4ADADD,    // Key to parent table: pauta
+		    %Key_reuniao_045908D77223287D    // Key for this table: pauta/reuniao
+		FROM [http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterPauta?IDOrgao=$(numero)&datIni=$(inicioTexto)&datFim=$(fimTexto)] (XmlSimple, Table is [pauta/reuniao]);
+		
+		PautaOrgao:
+		LOAD orgao,
+		    dataInicial,
+		    dataFinal,
+		    %Key_pauta_319BDB27DA4ADADD    // Key for this table: pauta
+		FROM [http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterPauta?IDOrgao=$(numero)&datIni=$(inicioTexto)&datFim=$(fimTexto)] (XmlSimple, Table is [pauta]);
+		// End of [2012.asmx/obterpauta?idorgao=2004&datini=01/01/2012&datfim=30/04/2012] LOAD statements
+		
+
+	END IF
+	trace 'http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterPauta?IDOrgao=$(numero)&datIni=$(inicioTexto)&datFim=$(fimTexto)';
+NEXT i
+*/
+	
+ENDIF
+

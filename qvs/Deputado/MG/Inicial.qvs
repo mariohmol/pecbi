@@ -1,0 +1,33 @@
+
+// Start of [em_exercicio.br/ws/deputados/em_exercicio] LOAD statements
+deputado:
+LOAD id,
+    nome,
+    partido,
+    tagLocalizacao,
+    %Key_listaDeputado_AC4079DF11CD2990    // Key to parent table: listaDeputado
+FROM [http://dadosabertos.almg.gov.br/ws/deputados/em_exercicio] (XmlSimple, Table is [listaDeputado/deputado]);
+
+
+
+
+
+
+
+//Candidaturas
+//dadosabertos.almg.gov.br/ws/deputados/ajuda
+//http://dadosabertos.almg.gov.br/ws/deputados/em_exercicio
+//Completo -> http://dadosabertos.almg.gov.br/ws/deputados/18847
+
+//Votacoes
+
+//Proposicoes
+//dadosabertos.almg.gov.br/ws/proposicoes/ajuda
+//http://dadosabertos.almg.gov.br/ws/pronunciamentos/ajuda
+
+//Presenças: ??
+
+//Processos: - script pronto
+
+//Despesa
+//http://dadosabertos.almg.gov.br/ws/prestacao_contas/verbas_indenizatorias/deputados/7753/2012/1

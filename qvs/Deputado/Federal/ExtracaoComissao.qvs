@@ -1,0 +1,31 @@
+
+IF  '$(vExtracao)'='T' THEN
+
+	
+	/*
+
+LOAD distinct idOrgaoLegislativoCD, 
+     siglaComissao, 
+     nomeComissao, 
+     idCargo, 
+     nomeCargo, 
+     dataEntrada, 
+     dataSaida, 
+     %Key_Deputado_44AE59C95113D768
+FROM
+[F:\Projetos\pecbi\qvd\extrator\DetalhesDeputado\DetalhesDeputado-cargoComissoes-*.qvd]
+(qvd)
+where trim(dataSaida)=''
+;
+exit Script;
+
+
+
+//SENADO
+DIRECTORY;
+$(Must_Include=QVS\Senado\Extracao.qvs);
+
+*/
+	
+	
+ENDIF

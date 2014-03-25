@@ -1,0 +1,72 @@
+
+	//Converte Versao transformada em versao extraida
+	
+	
+	set mesAno='012014';
+	trace '$(mesAno)';
+         Proposicao:
+			LOAD 
+				
+					
+		Proposicao.Id as id,
+		Proposicao.nomePolitico as nomePolitico,
+		Proposicao.numero as numero ,
+		Proposicao.ano as ano,
+		Proposicao.datApresentacao as datApresentacao,
+		Proposicao.txtEmenta as txtEmenta,
+		Proposicao.txtExplicacaoEmenta as txtExplicacaoEmenta,
+		Proposicao.qtdAutores as qtdAutores,
+		Proposicao.indGenero as indGenero,
+		Proposicao.qtdOrgaosComEstado as qtdOrgaosComEstado,
+	
+				
+		//[situacao/
+		Proposicao.situacao as [situacao/id],
+		Proposicao.descricao as descricao,
+		Proposicao.codProposicaoPrincipal as codProposicaoPrincipal,
+		Proposicao.proposicaoPrincipal as proposicaoPrincipal,
+		Proposicao.codOrgaoEstado as codOrgaoEstado,
+		Proposicao.siglaOrgaoEstado as siglaOrgaoEstado,
+		//[situacao/
+		
+		//[ultimoDespacho/
+		Proposicao.datDespacho as datDespacho,
+		Proposicao.txtDespacho as txtDespacho,
+		//[ultimoDespacho/
+		
+		//[autor1/
+		Proposicao.txtNomeAutor as txtNomeAutor,
+		ideCadastro,
+		Proposicao.codPartido as codPartido,
+		Proposicao.txtSiglaPartido as txtSiglaPartido,
+		Proposicao.txtSiglaUF as txtSiglaUF,
+		//[autor1/
+
+		//[apreciacao/
+		Proposicao.apreciacaoId as [apreciacao/id],
+		Proposicao.txtApreciacao as txtApreciacao,
+		//[apreciacao/
+		
+		//[regime/
+		Proposicao.codRegime as codRegime,
+		Proposicao.txtRegime as txtRegime,
+		//[regime/
+		
+		//[orgaoNumerador/
+		Proposicao.orgaoNumeradorId as [orgaoNumerador/id],
+		Proposicao.orgaoNumeradorSigla as [orgaoNumerador/sigla],
+		Proposicao.orgaoNumeradorNome as [orgaoNumerador/nome],
+		//[orgaoNumerador/
+		
+		
+		//[tipoProposicao/
+		Proposicao.tipoProposicaoId as [tipoProposicao/id],
+		TipoProposicao.tipoSigla as [tipoProposicao/sigla],
+		Proposicao.tipoProposicaoNome as [tipoProposicao/nome]
+		//[tipoProposicao/
+		
+			FROM qvd\extrator\ProposicaoCompleta-$(mesAno).qvd(qvd);
+		
+		
+	store Proposicao into [qvd\extrator\ProposicaoCompleta2-$(mesAno).qvd];
+	

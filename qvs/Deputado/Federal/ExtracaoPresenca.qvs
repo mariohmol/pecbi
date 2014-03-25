@@ -1,0 +1,62 @@
+
+IF  '$(vExtracao)'='T' THEN
+
+	trace --- EXTRACAO DAS PRESENCAS ---;
+		
+	let vDays = num#(fim - inicio);
+	FOR i = 0 to vDays
+
+		let z = Date(fim - vDays + i, 'DD/MM/YYYY');
+		let txt = Date(fim - vDays + i, 'YYYYMMDD');
+		let dia = i +1;
+		
+		parlamentar:
+		LOAD carteiraParlamentar,
+		    nomeParlamentar,
+		    siglaPartido,
+		    siglaUF,
+		    descricaoFrequenciaDia,
+		    justificativa,
+		    presencaExterna,
+		    %Key_dia_904776C647E95CD0 as diaKey,    // Key to parent table: dia
+		    %Key_parlamentar_B1783E991544261E as parKey    // Key for this table: dia/parlamentares/parlamentar
+		FROM [http://www.camara.gov.br/sitcamaraws/SessoesReunioes.asmx/ListarPresencasDia?data=$(z)&numMatriculaParlamentar=&parteNomeParlamentar=&siglaPartido=&siglaUF=] (XmlSimple, Table is [dia/parlamentares/parlamentar]);
+	
+		dia:
+		LOAD data,
+		    qtdeSessoesDia,
+		    legislatura,
+		    %Key_dia_904776C647E95CD0 as diaKey    // Key for this table: dia
+		FROM [http://www.camara.gov.br/sitcamaraws/SessoesReunioes.asmx/ListarPresencasDia?data=$(z)&numMatriculaParlamentar=&parteNomeParlamentar=&siglaPartido=&siglaUF=] (XmlSimple, Table is [dia]);
+		
+		sessaoDia:	
+		LOAD inicio,
+			$(dia) as dia,
+		    descricao,
+		    frequencia,
+		    %Key_parlamentar_B1783E991544261E as parKey   // Key to parent table: dia/parlamentares/parlamentar
+		FROM [http://www.camara.gov.br/sitcamaraws/SessoesReunioes.asmx/ListarPresencasDia?data=$(z)&numMatriculaParlamentar=&parteNomeParlamentar=&siglaPartido=&siglaUF=] (XmlSimple, Table is [dia/parlamentares/parlamentar/sessoesDia/sessaoDia]);
+	
+	
+		resultadoPresenca:
+		load  nomeParlamentar as Politico,parKey, diaKey resident parlamentar; 
+		
+		Left Join (resultadoPresenca)
+		load frequencia as frequenciaPresenca, descricao as descricaoPresenca,parKey  resident sessaoDia; 
+		
+		Left Join (resultadoPresenca)
+		load qtdeSessoesDia as total,data as DataPresenca,diaKey  resident dia;
+		
+		store resultadoPresenca into [qvd\extrator\Presenca\resultadoPresenca-$(txt).qvd];
+			
+		drop table resultadoPresenca;
+		drop table parlamentar;
+		drop table sessaoDia;
+		drop table dia;
+	
+	NEXT i
+	
+
+	
+	
+ENDIF

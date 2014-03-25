@@ -1,0 +1,94 @@
+
+IF '$(vExportacao)'='T' THEN
+	
+	ExpPartido:
+	load distinct 
+	Candidaturas.NUMERO_PARTIDO as ExpPartido.Codigo,
+	Candidaturas.SIGLA_PARTIDO as ExpPartido.Sigla,	
+	Candidaturas.NOME_PARTIDO as ExpPartido.Nome resident Candidaturas;
+	
+	
+	ExpPolitico:
+	load 
+	NOME_CANDIDATO,
+	ideCadastro as ExpPolitico.ID resident Deputados;
+
+	ExpPolitico2:	
+	Inner Join 
+	load  distinct 
+	Candidaturas.CODIGO_SEXO as ExpPolitico.Sexo,
+	Candidaturas.DESCRICAO_SEXO as ExpPolitico.DescSexo,	
+	Candidaturas.NOME_URNA_CANDIDATO as ExpPolitico.NomeReduzido,
+	date#(Candidaturas.DATA_NASCIMENTO,'DD.MM.YYYY')  as ExpPolitico.DataNascimento,
+	NOME_CANDIDATO as ExpPolitico.Nome,
+	NOME_CANDIDATO,
+	Candidaturas.ANO_ELEICAO as ExpPolitico.Ano resident Candidaturas;
+	
+	
+	
+	ExpCandidaturas:
+	load  distinct 
+	NOME_CANDIDATO& ' - ' & Candidaturas.NOME_LEGENDA as ExpCandidaturas.Titulo,
+	NOME_CANDIDATO as ExpCandidaturas.Nome,
+	Candidaturas.ANO_ELEICAO as ExpCandidaturas.Ano,
+	Candidaturas.SIGLA_UF as ExpCandidaturas.UF,
+	Candidaturas.DESCRICAO_UE as ExpCandidaturas.Cidade,
+	Candidaturas.DESCRICAO_CARGO as ExpCandidaturas.Cargo,
+	Candidaturas.NOME_PARTIDO as ExpCandidaturas.Partido,
+	Candidaturas.DESC_SIT_TOT_TURNO as ExpCandidaturas.DescSituacao  resident Candidaturas;
+	
+	store ExpPartido into [qvd\transformador\ExpPartido.qvd];	
+	store ExpPolitico into [qvd\transformador\ExpPolitico.qvd];
+	store ExpCandidaturas into [qvd\transformador\ExpCandidaturas.qvd];
+	
+	drop table ExpPartido;
+	drop table ExpPolitico;
+	drop table ExpCandidaturas;
+
+ENDIF
+
+
+
+IF  '$(vConvertCSV)'='T' THEN
+
+	ExpPartido:
+	load *  FROM qvd\transformador\ExpPartido.qvd (qvd);
+	store ExpPartido into [qvd\transformador\ExpPartido.csv] (txt);
+	drop table ExpPartido;
+	
+	ExpPolitico:
+	load *  FROM qvd\transformador\ExpPolitico.qvd (qvd);
+	store ExpPolitico into [qvd\transformador\ExpPolitico.csv] (txt);
+	drop table ExpPolitico;
+
+	ExpCandidaturas:
+	load *  FROM qvd\transformador\ExpCandidaturas.qvd (qvd);	
+	store ExpCandidaturas into [qvd\transformador\ExpCandidaturas.csv] (txt);
+	drop table ExpCandidaturas;
+	
+	ExpCandidaturas:
+	load *  FROM qvd\transformador\ExpCandidaturas.qvd (qvd) where ExpCandidaturas.Ano='2010' ;	
+	store ExpCandidaturas into [qvd\transformador\ExpCandidaturas2010.csv] (txt);
+	drop table ExpCandidaturas;
+	
+	NoConcatenate
+	ExpPolitico2010:
+	load *  FROM qvd\transformador\ExpPolitico.qvd (qvd) where ExpPolitico.Ano='2010' ;
+	store ExpPolitico2010 into [qvd\transformador\ExpPolitico2010.csv] (txt);
+	drop table ExpPolitico2010;
+	
+	NoConcatenate
+	ExpPontuacao:
+	load * from  [qvd\transformador\ExpPontuacao.qvd](qvd);
+	store ExpPontuacao into [qvd\transformador\ExpPontuacao.csv] (txt);
+	drop table ExpPontuacao;
+	
+	NoConcatenate
+	ExpPontuacaoHistorico:
+	load * from  [qvd\transformador\ExpPontuacaoTotal.qvd](qvd);
+	store ExpPontuacaoHistorico into [qvd\transformador\ExpPontuacaoTotal.csv] (txt);
+	drop table ExpPontuacaoHistorico;
+
+	
+	
+ENDIF

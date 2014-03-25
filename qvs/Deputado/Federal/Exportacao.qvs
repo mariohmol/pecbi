@@ -1,0 +1,230 @@
+
+IF '$(vExportacao)'='T' THEN
+	
+	ExpPartido:
+	load distinct 
+	Candidaturas.NUMERO_PARTIDO as ExpPartido.Codigo,
+	Candidaturas.SIGLA_PARTIDO as ExpPartido.Sigla,	
+	Candidaturas.NOME_PARTIDO as ExpPartido.Nome resident Candidaturas;
+	
+	NoConcatenate
+	
+	ExpPolitico:
+	load 
+		Deputados.NOME_CANDIDATO as ExpPolitico.Nome,
+		Deputados.ideCadastro as ExpPolitico.ID,
+		Deputados.uf as ExpPolitico.UF,
+		Deputados.TituloPolitico as ExpPolitico.Titulo,
+		Deputados.partido as ExpPolitico.Sigla
+		resident Deputados;
+
+	left join(ExpPolitico) 
+	load  distinct 
+		Candidaturas.CODIGO_SEXO as ExpPolitico.Sexo,
+		Candidaturas.DESCRICAO_SEXO as ExpPolitico.DescSexo,	
+		Candidaturas.NOME_URNA_CANDIDATO as ExpPolitico.NomeReduzido,
+		date#(Candidaturas.DATA_NASCIMENTO,'DD.MM.YYYY')  as ExpPolitico.DataNascimento,
+		NOME_CANDIDATO as ExpPolitico.Nome,
+		Candidaturas.DESCRICAO_UE as ExpPolitico.Cidade,
+		Candidaturas.ANO_ELEICAO as ExpPolitico.Ano,
+		Candidaturas.DESCRICAO_CARGO as ExpPolitico.Cargo,		
+		Candidaturas.DESC_SIT_TOT_TURNO as ExpPolitico.DescSituacao,
+		NOME_CANDIDATO& ' - ' & Candidaturas.NOME_LEGENDA as ExpPolitico.TituloLegenda
+	resident Candidaturas;
+	
+	NoConcatenate
+	
+	ExpCandidaturas:
+	load  distinct 
+		ExpPolitico.TituloLegenda as ExpCandidaturas.Titulo,
+		ExpPolitico.Nome as ExpCandidaturas.Nome,
+		ExpPolitico.Ano as ExpCandidaturas.Ano,
+		ExpPolitico.UF as ExpCandidaturas.UF,
+		ExpPolitico.Cidade as ExpCandidaturas.Cidade,
+		ExpPolitico.Cargo as ExpCandidaturas.Cargo,
+		ExpPolitico.Sigla as ExpCandidaturas.Sigla,
+		ExpPolitico.DescSituacao as ExpCandidaturas.DescSituacao,
+		ExpPolitico.ID as ExpCandidaturas.ID	
+	resident ExpPolitico;
+	
+	
+	/*
+	ExpCandidaturas:
+	load  distinct 
+	NOME_CANDIDATO& ' - ' & Candidaturas.NOME_LEGENDA as ExpCandidaturas.Titulo,
+	NOME_CANDIDATO as ExpCandidaturas.Nome,
+	Candidaturas.ANO_ELEICAO as ExpCandidaturas.Ano,
+	Candidaturas.SIGLA_UF as ExpCandidaturas.UF,
+	Candidaturas.DESCRICAO_UE as ExpCandidaturas.Cidade,
+	Candidaturas.DESCRICAO_CARGO as ExpCandidaturas.Cargo,
+	Candidaturas.NOME_PARTIDO as ExpCandidaturas.Partido,
+	Candidaturas.DESC_SIT_TOT_TURNO as ExpCandidaturas.DescSituacao  resident Candidaturas;
+	*/
+    
+	
+	store ExpPartido into [qvd\transformador\ExpPartido.qvd];	
+	store ExpPolitico into [qvd\transformador\ExpPolitico.qvd];
+	store ExpCandidaturas into [qvd\transformador\ExpCandidaturas.qvd];
+	
+	drop table ExpPartido;
+	drop table ExpPolitico;
+	drop table ExpCandidaturas;
+
+ENDIF
+
+
+IF  '$(vConvertCSV)'='T' THEN
+
+	ExpPartido:
+	load *  FROM qvd\transformador\ExpPartido.qvd (qvd);
+	store ExpPartido into [qvd\exportador\ExpPartido.csv] (utf8, txt);
+	drop table ExpPartido;
+	
+	ExpPolitico:
+	load *  FROM qvd\transformador\ExpPolitico.qvd (qvd);
+	store ExpPolitico into [qvd\exportador\ExpPolitico.csv] (utf8, txt);
+	drop table ExpPolitico;
+ 
+	ExpCandidaturas:
+	load *  FROM qvd\transformador\ExpCandidaturas.qvd (qvd);	
+	store ExpCandidaturas into [qvd\exportador\ExpCandidaturas.csv] (utf8, txt);
+	drop table ExpCandidaturas;
+	
+	ExpCandidaturas:
+	load  	
+		ExpCandidaturas.Titulo,
+		ExpCandidaturas.Nome,
+		ExpCandidaturas.Ano,
+		ExpCandidaturas.UF,
+		ExpCandidaturas.Cidade,
+		ExpCandidaturas.Cargo,
+		ExpCandidaturas.Sigla,
+		ExpCandidaturas.DescSituacao,
+		ExpCandidaturas.ID
+	
+		FROM qvd\transformador\ExpCandidaturas.qvd (qvd) where ExpCandidaturas.Ano='2010'
+		and not isnull(ExpCandidaturas.ID) and not isnull(ExpCandidaturas.Nome) ;	
+	store ExpCandidaturas into [qvd\exportador\ExpCandidaturas2010.csv] (utf8, txt);
+	drop table ExpCandidaturas;
+	
+	NoConcatenate
+	ExpPolitico2010:
+	load *  
+		FROM qvd\transformador\ExpPolitico.qvd (qvd) where ExpPolitico.Ano='2010' 
+			and not isnull(ExpPolitico.ID) and not isnull(ExpPolitico.Nome) ;
+	store ExpPolitico2010 into [qvd\exportador\ExpPolitico2010.csv] (utf8, txt);
+	drop table ExpPolitico2010;
+	
+	NoConcatenate
+	ExpPontuacao:
+	load * from  [qvd\transformador\ExpPontuacao.qvd](qvd);
+	store ExpPontuacao into [qvd\exportador\ExpPontuacao.csv] (utf8, txt);
+	drop table ExpPontuacao;
+	
+	NoConcatenate
+	ExpPontuacaoHistorico:
+	load 	
+		ExpPontuacao.ideCadastro,
+		ExpPontuacao.Semana,		
+		ExpPontuacao.UltimoPresenca,
+		//ExpPontuacao.TendenciaPresenca,
+		ExpPontuacao.TotalPresenca,
+		ExpPontuacao.UltimoProposicao,
+		//ExpPontuacao.TendenciaProposicao,
+		ExpPontuacao.TotalProposicao,
+		ExpPontuacao.UltimoDespesa,
+		//ExpPontuacao.TendenciaDespesa,
+		ExpPontuacao.TotalDespesa,
+		ExpPontuacao.UltimoVotacao,
+		//ExpPontuacao.TendenciaVotacao,
+		ExpPontuacao.TotalVotacao,
+		ExpPontuacao.PontoPresenca,
+		ExpPontuacao.PontoProposicao,
+		ExpPontuacao.PontoDespesa,
+		ExpPontuacao.PontoVotacao,
+		ExpPontuacao.Pontuacao,
+		ExpPontuacao.Ano
+	
+	from  [qvd\transformador\ExpPontuacaoTotal.qvd](qvd);
+	store ExpPontuacaoHistorico into [qvd\exportador\ExpPontuacaoTotal.csv] (utf8, txt);
+	drop table ExpPontuacaoHistorico;
+
+	
+	
+	/**
+	EXPORTAR RODADA
+	
+
+		ExpPontuacao.MaxTotalPresenca,ExpPontuacao.MaxUltimoPresenca,ExpPontuacao.MaxTendenciaPresenca,
+		ExpPontuacao.MaxTotalProposicao,ExpPontuacao.MaxUltimoProposicao,ExpPontuacao.MaxTendenciaProposicao,
+		ExpPontuacao.MaxTotalDespesa,ExpPontuacao.MaxUltimoDespesa,ExpPontuacao.MaxTendenciaDespesa,
+		ExpPontuacao.MaxTotalVotacao,ExpPontuacao.MaxUltimoVotacao,ExpPontuacao.MaxTendenciaVotacao,
+
+		ExpPontuacao.MinTotalPresenca,ExpPontuacao.MinUltimoPresenca,ExpPontuacao.MinTendenciaPresenca,
+		ExpPontuacao.MinTotalProposicao,ExpPontuacao.MinUltimoProposicao,ExpPontuacao.MinTendenciaProposicao,
+		ExpPontuacao.MinTotalDespesa,ExpPontuacao.MinUltimoDespesa,ExpPontuacao.MinTendenciaDespesa,
+		ExpPontuacao.MinTotalVotacao,ExpPontuacao.MinUltimoVotacao,ExpPontuacao.MinTendenciaVotacao,
+
+		ExpPontuacao.RangePresenca,ExpPontuacao.RangeProposicao,ExpPontuacao.RangeDespesa,ExpPontuacao.RangeVotacao,
+	*/
+	
+	NoConcatenate
+	
+	ExpProcessosAbertos:
+	load * from   [qvd\transformador\ProcessosAbertos.qvd] (qvd);
+	store ExpProcessosAbertos into [qvd\exportador\ExpProcessosAbertos.csv] (utf8, txt);
+	drop table ExpProcessosAbertos;
+	
+	NoConcatenate
+	
+	ExpProposicao:
+	load * from  [qvd\transformador\Proposicao.qvd] (qvd);	
+	
+		left join(ExpProposicao)
+			load *, 
+			ProposicaoVotada.id as Proposicao.numero,
+			ProposicaoVotada.ano as Proposicao.ano 
+				from [qvd\extrator\ProposicaoVotada.qvd] (qvd) where not isnull(trim(ProposicaoVotada.id));	
+	
+	store ExpProposicao into [qvd\exportador\ExpProposicao.csv] (utf8, txt);
+	drop table ExpProposicao;
+
+	
+	NoConcatenate
+	
+	
+	ExpDespesas:
+	load ideCadastro, Week(Despesas.Data) as Despesas.semana,
+	WeekStart(date(Despesas.Data,'YYYY-MM-DD'),0) as Despesas.semanaInicio,
+	WeekEnd(date(Despesas.Data,'YYYY-MM-DD'),0) as Despesas.semanaFim,
+	 Despesas.txtDescricao,sum(Despesas.vlrLiquido) as Despesas.vlrLiquido
+	 
+	 from  [qvd\transformador\Despesas.qvd](qvd)
+	 group by  ideCadastro, Week(Despesas.Data), Despesas.txtDescricao,WeekStart(date(Despesas.Data,'YYYY-MM-DD'),0),WeekEnd(date(Despesas.Data,'YYYY-MM-DD'),0)
+	 ;
+	 
+	store ExpDespesas into [qvd\exportador\ExpDespesas.csv] (utf8, txt);
+	drop table ExpDespesas;
+	
+	NoConcatenate
+	
+	ExpVotacaoDeputado:
+	load * from [qvd\transformador\VotacaoDeputado.qvd] (qvd);
+	store ExpVotacaoDeputado into [qvd\exportador\ExpVotacaoDeputado.csv] (utf8, txt);
+	drop table ExpVotacaoDeputado;
+	
+	
+ENDIF
+
+/*
+//VERIFICA VALORES EXPORTADOS
+ExpPartido:
+	load * ,ExpPartido.Sigla as ExpCandidaturas.Partido  FROM  [qvd\transformador\ExpPartido.csv]  (txt, utf8, embedded labels, delimiter is ',', msq);	
+	
+	ExpPolitico:
+	load * ,ExpPolitico.Nome as ExpCandidaturas.Nome  FROM    [qvd\transformador\ExpPolitico2010.csv]  (txt, utf8, embedded labels, delimiter is ',', msq);
+	
+	ExpCandidaturas:
+	load *  FROM   [qvd\transformador\ExpCandidaturas2010.csv] (txt, utf8, embedded labels, delimiter is ',', msq);
+	
+*/

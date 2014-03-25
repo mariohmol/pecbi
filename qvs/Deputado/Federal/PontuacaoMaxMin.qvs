@@ -1,0 +1,181 @@
+
+
+IF  '$(vPontuacaoCalculo)'='T' THEN
+
+	//Primeiro criamos mapas com o valor maximo encontrado por rodada (semana)
+
+	//MAX
+
+	
+	//PRESENCA
+	MapTotaisTotalPresenca:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.TotalPresenca) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;  
+
+	MapTotaisUltimoPresenca:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.UltimoPresenca) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	/*
+	MapTotaisTendenciaPresenca:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.TendenciaPresenca) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+	*/
+	 
+	//PROPOSICAO
+	MapTotaisTotalProposicao:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.TotalProposicao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	MapTotaisUltimoProposicao:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.UltimoProposicao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	/*
+	MapTotaisTendenciaProposicao:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.TendenciaProposicao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+	 */
+	 
+	 
+	//DESPESA
+	MapTotaisTotalDespesa:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.TotalDespesa) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	MapTotaisUltimoDespesa:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.UltimoDespesa) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	 /*
+	MapTotaisTendenciaDespesa:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.TendenciaDespesa) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+	*/
+	
+	
+	 
+	//VOTACAO
+	MapTotaisTotalVotacao:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.TotalVotacao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	MapTotaisUltimoVotacao:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.UltimoVotacao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	 /*
+	MapTotaisTendenciaVotacao:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.TendenciaVotacao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+	*/
+	
+	
+	//PROCESSOS
+	MapTotaisTotalProcesso:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.TotalProcesso) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	MapTotaisUltimoProcesso:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.UltimoProcesso) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	 /*
+	MapTotaisTendenciaProcesso:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,max(ExpPontuacao.TendenciaProcesso) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+	*/
+	
+	
+	
+	
+
+	
+	
+	
+	
+	//MIN
+	
+	
+	//PRESENCA
+	MapTotaisTotalMinPresenca:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.TotalPresenca) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;  
+
+	MapTotaisUltimoMinPresenca:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.UltimoPresenca) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+	 
+	/*
+	MapTotaisTendenciaMinPresenca:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.TendenciaPresenca) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+	*/
+	 
+	//PROPOSICAO
+	MapTotaisTotalMinProposicao:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.TotalProposicao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	MapTotaisUltimoMinProposicao:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.UltimoProposicao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	 /*
+	MapTotaisTendenciaMinProposicao:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.TendenciaProposicao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+	 */
+	 
+	 
+	//DESPESA
+	MapTotaisTotalMinDespesa:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.TotalDespesa) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	MapTotaisUltimoMinDespesa:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.UltimoDespesa) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	 /*
+	MapTotaisTendenciaMinDespesa:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.TendenciaDespesa) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+	*/
+	 
+	//VOTACAO
+	MapTotaisTotalMinVotacao:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.TotalVotacao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	MapTotaisUltimoMinVotacao:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.UltimoVotacao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	 /*
+	MapTotaisTendenciaMinVotacao:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.TendenciaVotacao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+	*/
+	
+	
+	
+	//PROCESSOS
+	MapTotaisTotalMinProcesso:
+	Mapping LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.TotalProcesso) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	MapTotaisUltimoMinProcesso:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.UltimoProcesso) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+
+	 /*
+	MapTotaisTendenciaMinProcesso:
+	Mapping  LOAD ExpPontuacao.SemanaAno as Key,min(ExpPontuacao.TendenciaProcesso) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.SemanaAno;
+	*/
+	
+	
+	
+
+ENDIF

@@ -1,0 +1,30 @@
+
+IF  '$(vExtracao)'='T' THEN
+	
+	
+	ExpCandidaturas:
+	load *  FROM   [qvd\transformador\ExpCandidaturas2010.csv] (txt, utf8, embedded labels, delimiter is ',', msq)
+	where not isnull(ExpCandidaturas.ID);
+
+
+	TRACE --- PROCESSOS COMPLETO ---;
+	ProcessosCompleto:
+		load 
+				 [Marque os processos que você deseja receber informacões.1] as Processos.Id,
+				 [Marque os processos que você deseja receber informacões.3] as Processos.Status
+		 from  [qvd\extrator\Processos\Processos2-*.qvd] (qvd);
+		store ProcessosCompleto into  [qvd\extrator\Processos\ProcessosCompleto2.qvd] (qvd);
+		
+		
+		 ProcessosAbertos:
+		load * from  [qvd\transformador\ProcessosAbertos.qvd] (qvd);
+		
+		
+	ProcessosCompleto:
+		load *
+		 from  [qvd\extrator\Processos\ProcessosCompleto-*.qvd] (qvd);
+		store ProcessosCompleto into  [qvd\extrator\Processos\ProcessosCompletoTodos.qvd] (qvd);
+
+	
+	
+ENDIF

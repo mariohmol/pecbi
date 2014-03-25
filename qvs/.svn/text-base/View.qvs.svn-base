@@ -1,0 +1,14 @@
+IF  '$(vView)'='T' THEN
+	Candidaturas:	
+	load *  FROM qvd\transformador\Candidaturas.qvd (qvd) where Candidaturas.DESCRICAO_CARGO='DEPUTADO FEDERAL';
+	STORE Candidaturas into qvd\transformador\CandidaturasDepFed.qvd;
+	
+	load *  FROM qvd\transformador\Deputados.qvd (qvd);
+	load *  FROM qvd\transformador\Presenca.qvd (qvd);	
+	load *  FROM qvd\transformador\TipoProposicao.qvd (qvd);	
+	load *  FROM qvd\transformador\Proposicao.qvd (qvd);	
+	
+	load *  FROM  [qvd\transformador\ExpPontuacaoTotal.qvd](qvd);
+
+ENDIF
+

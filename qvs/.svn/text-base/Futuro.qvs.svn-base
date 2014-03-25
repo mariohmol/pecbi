@@ -1,0 +1,107 @@
+//exit Script;
+
+//Pres:
+//load TituloPolitico,sum(total),Stdev(total) FROM qvd\transformador\Presenca.qvd (qvd) where frequenciaPresenca = 'Presença' group by TituloPolitico;	
+//load * FROM qvd\transformador\Presenca.qvd (qvd);	
+//exit script;
+
+ /**
+	 
+load 
+	//DADOS GERAIS
+	ExpPontuacao.uf,ExpPontuacao.ideCadastro ,ExpPontuacao.Cidade,ExpPontuacao.Cargo,ExpPontuacao.DataNascimento,ExpPontuacao.Titulo,
+			ExpPontuacao.AnoEleicao,ExpPontuacao.Sexo,ExpPontuacao.Partido,
+	
+	//PRESENçA
+	ExpPontuacao.totalPresenca,ExpPontuacao.UltimoPresenca  ,ExpPontuacao.TendenciaPresenca,
+	
+	//PROPOSICOES
+	ExpPontuacao.ProposicaoTotal , ExpPontuacao.ProposicaoUltimo  , ExpPontuacao.ProposicaoTendencia	,
+	ExpPontuacao.totalPresenca*0.25 + ExpPontuacao.totalPresenca*0.75 as ExpPontuacao.FinalTotal
+	 from qvd\transformador\ExpPontuacao.qvd (qvd);
+	 **/
+	 
+	 
+	 
+	 
+
+/*TESTES
+ExpPontuacao:
+	load 
+	 ExpPontuacao.Cidade,ExpPontuacao.Cargo,ExpPontuacao.DataNascimento,ExpPontuacao.Titulo,
+		ExpPontuacao.AnoEleicao,ExpPontuacao.Sexo,
+		IF(len(ExpPontuacao.nome)<2,ExpPontuacao.Titulo,ExpPontuacao.nome) as ExpPontuacao.nome,
+ExpPontuacao.uf,ExpPontuacao.Partido,
+		ExpPontuacao.TituloPolitico  ,ExpPontuacao.total ,ExpPontuacao.Ultimo  , ExpPontuacao.Tendencia ,
+		 ExpPontuacao.Tendencia / ExpPontuacao.Ultimo  as ExpPontuacao.TendenciaPorcentagem
+	  FROM qvd\transformador\ExpPontuacao.qvd (qvd);// where len(ExpPontuacao.nome) >1;
+
+store ExpPontuacao into [qvd\transformador\ExpPontuacao.csv] (txt);
+
+NaoEncontradosPontuacao:
+	load 
+	 ExpPontuacao.Cidade as NaoEncontradosPontuacao.Cidade,
+ExpPontuacao.Cargo as NaoEncontradosPontuacao.Cargo,
+ExpPontuacao.DataNascimento as NaoEncontradosPontuacao.DataNascimento,
+ExpPontuacao.Titulo as NaoEncontradosPontuacao.Titulo,
+		ExpPontuacao.AnoEleicao as NaoEncontradosPontuacao.AnoEleicao,
+ExpPontuacao.Sexo as NaoEncontradosPontuacao.Sexo,
+		ExpPontuacao.nome as NaoEncontradosPontuacao.nome,
+ExpPontuacao.uf as NaoEncontradosPontuacao.uf,
+ExpPontuacao.Partido as NaoEncontradosPontuacao.Partido,
+		ExpPontuacao.TituloPolitico as NaoEncontradosPontuacao.TituloPolitico  
+	  FROM qvd\transformador\ExpPontuacao.qvd (qvd) where len(ExpPontuacao.nome) <2 ;
+
+
+store NaoEncontradosPontuacao into [qvd\transformador\NaoEncontradosPontuacao.csv] (txt);
+*/
+
+
+
+
+
+
+
+
+
+
+/**		// Start of [ObterVotacaoProposicao?tipo=PL&numero=1992&ano=2007.asmx/obtervotacaoproposicao?tipo=pl&numero=1992&ano=2007] LOAD statements
+bancada:
+LOAD Sigla,
+    orientacao,
+    %Key_Votacao_F7152F3C01FFE75C    // Key to parent table: proposicao/Votacoes/Votacao
+FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ObterVotacaoProposicao?tipo=PL&numero=1992&ano=2007] (XmlSimple, Table is [proposicao/Votacoes/Votacao/orientacaoBancada/bancada]);
+**/
+
+//load *  FROM qvd\transformador\Deputados.qvd (qvd); 
+//load *  FROM qvd\transformador\Proposicao.qvd (qvd); 	
+
+//ORGAOS
+//http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterOrgaos
+
+//ANDAMENTO ORGAOS
+//http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/orgaos/obterandamento
+//http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterAndamento?sigla=PL&numero=3962&ano=2008&dataIni=01/01/2009&codOrgao=
+
+
+//COMISSOES RELATOR
+//http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/orgaos/obterintegracomissoesrelator
+//http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterIntegraComissoesRelator?tipo=PL&numero=3962&ano=2008
+
+//LIDERES DE BANCADA
+//http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterLideresBancadas
+	
+	
+//DISCURSOS
+//http://www2.camara.leg.br/transparencia/dados-abertos/dados-abertos-legislativo/webservices/sessoesreunioes-2/listardiscursosplenario
+//http://www.camara.gov.br/sitcamaraws/SessoesReunioes.asmx/ListarDiscursosPlenario?dataIni=23/11/2012&dataFim=23/11/2012&codigoSessao=&parteNomeParlamentar=&siglaPartido=&siglaUF=
+
+//OBTER COMISSOES DOS DEPUTADOS
+//http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDeputados
+
+//VOTACAO PROPOSICAO
+//http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ObterVotacaoProposicao?tipo=PL&numero=1992&ano=2007
+	
+	
+
+

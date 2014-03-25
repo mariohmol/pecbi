@@ -1,0 +1,64 @@
+
+
+IF  '$(vPontuacaoCalculo)'='T' THEN
+
+	//Primeiro criamos mapas com o valor maximo encontrado por rodada (semana)
+	MapTotaisTotalPresenca:
+	Mapping LOAD ExpPontuacao.Semana as Key,max(ExpPontuacao.TotalPresenca) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.Semana;  
+
+	MapTotaisUltimoPresenca:
+	Mapping LOAD ExpPontuacao.Semana as Key,max(ExpPontuacao.UltimoPresenca) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.Semana;
+
+	MapTotaisTendenciaPresenca:
+	Mapping LOAD ExpPontuacao.Semana as Key,max(ExpPontuacao.TendenciaPresenca) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.Semana;
+
+	MapTotaisTotalProposicao:
+	Mapping LOAD ExpPontuacao.Semana as Key,max(ExpPontuacao.TotalProposicao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.Semana;
+
+	MapTotaisUltimoProposicao:
+	Mapping  LOAD ExpPontuacao.Semana as Key,max(ExpPontuacao.UltimoProposicao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.Semana;
+
+	MapTotaisTendenciaProposicao:
+	Mapping  LOAD ExpPontuacao.Semana as Key,max(ExpPontuacao.TendenciaProposicao) as Value
+	 from qvd\transformador\ExpPontuacao.qvd (qvd) group by ExpPontuacao.Semana;
+
+	//Juntamos os maximos aos registros das candidaturas por rodada
+	ExpPontuacao:
+	load *,
+	ApplyMap('MapTotaisTotalPresenca',ExpPontuacao.Semana,0) as ExpPontuacao.MaxTotalPresenca,
+	ApplyMap('MapTotaisUltimoPresenca',ExpPontuacao.Semana,0) as  ExpPontuacao.MaxUltimoPresenca,
+	ApplyMap('MapTotaisTendenciaPresenca',ExpPontuacao.Semana,0) as  ExpPontuacao.MaxTendenciaPresenca,
+	ApplyMap('MapTotaisTotalProposicao',ExpPontuacao.Semana,0) as  ExpPontuacao.MaxTotalProposicao,
+	ApplyMap('MapTotaisUltimoProposicao',ExpPontuacao.Semana,0) as  ExpPontuacao.MaxUltimoProposicao,
+	ApplyMap('MapTotaisTendenciaProposicao',ExpPontuacao.Semana,0) as  ExpPontuacao.MaxTendenciaProposicao
+
+	from qvd\transformador\ExpPontuacao.qvd (qvd);
+
+
+	NoConcatenate
+	
+	//Fazemos os calculos dos pontos considerando o valor do deputado na rodada e o maximo, alem do peso de cada fator (presenca, proposicao..)
+	ExpPontuacaoTotal:
+	load *,
+	ExpPontuacao.UltimoPresenca/ExpPontuacao.MaxUltimoPresenca as ExpPontuacao.PontoPresenca,
+	ExpPontuacao.UltimoProposicao/ExpPontuacao.MaxUltimoProposicao as ExpPontuacao.PontoProposicao,
+		((ExpPontuacao.UltimoPresenca/ExpPontuacao.MaxUltimoPresenca)*$(pesoPresenca) 
+		+ (ExpPontuacao.UltimoProposicao/ExpPontuacao.MaxUltimoProposicao)*$(pesoProposicao)) *10 as ExpPontuacao.Pontuacao,
+		((ExpPontuacao.TotalPresenca/ExpPontuacao.MaxTotalPresenca)*$(pesoPresenca) 
+		+ (ExpPontuacao.TotalProposicao/ExpPontuacao.MaxTotalProposicao)*$(pesoProposicao)) *10 as ExpPontuacao.TotalPontuacao,
+		((ExpPontuacao.TendenciaPresenca/ExpPontuacao.MaxTendenciaPresenca)*$(pesoPresenca) 
+		+ (ExpPontuacao.TendenciaProposicao/ExpPontuacao.MaxTendenciaProposicao)*$(pesoProposicao)) *10 as ExpPontuacao.TendenciaPontuacao
+	 Resident ExpPontuacao;
+	 
+	 //Guarda todo o historico de pontuacoes para exibicao de graficos
+	store ExpPontuacaoTotal into [qvd\transformador\ExpPontuacaoTotal.qvd];
+	
+	drop table ExpPontuacao;
+	drop table ExpPontuacaoTotal;	
+
+ENDIF

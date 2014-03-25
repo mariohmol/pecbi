@@ -1,0 +1,87 @@
+
+
+IF  '$(vPontuacao)'='T' THEN
+	
+	//let ultimo=Date(inicial - (7 * 1), 'DD/MM/YYYY'); //date($(y),'DD/MM/YYYY');
+	//let tendencia=Date(inicial - (7 * 5), 'DD/MM/YYYY'); //date($(y),'DD/MM/YYYY');
+
+
+	ExpPontuacao:
+	//Dados do Candidato
+	load 
+		Candidaturas.DESCRICAO_UE as ExpPontuacao.Cidade,
+		Candidaturas.DESCRICAO_CARGO as ExpPontuacao.Cargo,
+		Candidaturas.DATA_NASCIMENTO as ExpPontuacao.DataNascimento,
+		ApplyMap('NomeDiferente',NOME_CANDIDATO) as ExpPontuacao.Titulo,
+		Candidaturas.ANO_ELEICAO as ExpPontuacao.AnoEleicao,
+		Candidaturas.DESCRICAO_SEXO as ExpPontuacao.Sexo,
+		Candidaturas.NOME_PARTIDO as ExpPontuacao.Partido
+			resident Candidaturas where
+		(Candidaturas.DESC_SIT_TOT_TURNO like 'ELEITO*') and 
+		(Candidaturas.DESCRICAO_CARGO='DEPUTADO FEDERAL' or Candidaturas.DESCRICAO_CARGO='SENADOR'); 
+
+	//Dados do Deputado
+	left join(ExpPontuacao)
+	load  distinct 
+	nome as ExpPontuacao.nome,uf as ExpPontuacao.uf,ideCadastro as ExpPontuacao.ideCadastro ,
+	TituloPolitico as ExpPontuacao.TituloPolitico,ApplyMap('NomeDiferente',NOME_CANDIDATO) as ExpPontuacao.Titulo  resident Deputados;
+	
+	
+	//PRESENCA
+	
+		//Ultimo de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		TituloPolitico as ExpPontuacao.TituloPolitico,sum(total) as ExpPontuacao.UltimoPresenca ,Week(DataPresenca) as ExpPontuacao.Semana ,Week(DataPresenca)-1 as ExpPontuacao.UltimaSemana 
+		resident Presenca 
+			where //("DataPresenca" <= '$(inicial)')  and  
+			frequenciaPresenca='Presença' group by TituloPolitico,Week(DataPresenca);
+	
+		//Tendencia de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		TituloPolitico as ExpPontuacao.TituloPolitico,sum(total) as ExpPontuacao.TendenciaPresenca ,Week(DataPresenca) as ExpPontuacao.UltimaSemana 
+		resident Presenca 
+			where //("DataPresenca" <= '$(inicial)')  and  
+			frequenciaPresenca='Presença' group by TituloPolitico,Week(DataPresenca);
+	
+		//Ultimo de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		TituloPolitico as ExpPontuacao.TituloPolitico,sum(total) as ExpPontuacao.TotalPresenca 
+		resident Presenca 
+			where //("DataPresenca" <= '$(inicial)')  and  
+			frequenciaPresenca='Presença' group by TituloPolitico;
+	
+	
+	//PROPOSICAO	
+		//Total de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(ideCadastro) as ExpPontuacao.UltimoProposicao  ,Week(Proposicao.datApresentacao) as ExpPontuacao.Semana,Week(Proposicao.datApresentacao)-1 as ExpPontuacao.UltimaSemana
+		resident Proposicao //where ("Proposicao.datApresentacao" <= '$(inicial)') 
+			group by ideCadastro,Week(Proposicao.datApresentacao);
+			
+		//Tendencia de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(ideCadastro) as ExpPontuacao.TendenciaProposicao  ,Week(Proposicao.datApresentacao) as ExpPontuacao.UltimaSemana
+		resident Proposicao //where ("Proposicao.datApresentacao" <= '$(inicial)') 
+			group by ideCadastro,Week(Proposicao.datApresentacao);
+	
+	
+	
+			//Ultimo de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(ideCadastro) as ExpPontuacao.TotalProposicao  
+		resident Proposicao //where ("Proposicao.datApresentacao" <= '$(inicial)') 
+			group by ideCadastro;
+			
+	
+	
+	
+	store ExpPontuacao into [qvd\transformador\ExpPontuacao.qvd] (qvd);
+	drop table ExpPontuacao;
+	
+ENDIF

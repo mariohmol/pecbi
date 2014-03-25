@@ -1,0 +1,40 @@
+IF  '$(vView)'='T' THEN
+	Candidaturas:	
+	load *  FROM qvd\transformador\Candidaturas.qvd (qvd) where Candidaturas.DESCRICAO_CARGO='DEPUTADO FEDERAL';
+	STORE Candidaturas into qvd\transformador\CandidaturasDepFed.qvd;
+	
+	load *  FROM qvd\transformador\Deputados.qvd (qvd);
+	load distinct *  FROM qvd\transformador\Presenca.qvd (qvd);	
+	load *  FROM qvd\transformador\TipoProposicao.qvd (qvd);	
+	load distinct *  FROM qvd\transformador\Proposicao.qvd (qvd);	
+	
+	Despesa:
+	load *  FROM qvd\transformador\Despesas.qvd (qvd);	
+	
+	
+
+	Processo:
+	load *  FROM   [qvd\transformador\Processos.qvd] (qvd);
+	
+	NoConcatenate
+	
+	ProcessoDetalhe:
+	load *  FROM    [qvd\transformador\ProcessosDetalhe.qvd] (qvd);
+	
+	NoConcatenate
+	
+	ProcessosAbertos:
+	load *  FROM  [qvd\transformador\ProcessosAbertos.qvd] (qvd);
+	
+	NoConcatenate
+	
+	ProposicaoVotada:
+	load * from [qvd\extrator\ProposicaoVotada.qvd] (qvd) where not isnull(trim(ProposicaoVotada.id));	
+	
+	NoConcatenate
+	
+	VotacaoDeputado:
+	load distinct * from [qvd\transformador\VotacaoDeputado.qvd] (qvd);
+	
+ENDIF
+

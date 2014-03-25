@@ -1,0 +1,123 @@
+LET inicial=Date('05/07/2013','DD/MM/YYYY');
+//INCLUDES DE SCRIPTS
+//DIRECTORY;
+$(Must_Include=QVS\Inicial.qvs);
+
+
+MapaTotais:
+LOAD 
+max(ExpPontuacao.totalPresenca) as TotalPresenca,
+max(ExpPontuacao.UltimoPresenca) as UltimoPresenca,
+max(ExpPontuacao.TendenciaPresenca) as TendenciaPresenca,
+max(ExpPontuacao.ProposicaoTotal) as ProposicaoTotal,
+max(ExpPontuacao.ProposicaoUltimo) as ProposicaoUltimo,
+max(ExpPontuacao.ProposicaoTendencia) as ProposicaoTendencia
+ from qvd\transformador\ExpPontuacao.qvd (qvd);  
+ 
+LET TotalPresenca = Peek('TotalPresenca');
+LET UltimoPresenca = Peek('UltimoPresenca');
+LET TendenciaPresenca = Peek('TendenciaPresenca');
+LET ProposicaoTotal = Peek('ProposicaoTotal');
+LET ProposicaoUltimo = Peek('ProposicaoUltimo');
+LET ProposicaoTendencia = Peek('ProposicaoTendencia');
+  
+  
+MaximoPontuacao:
+load 
+	DISTINCT 
+	//* 
+	/**
+	//PRESENçA
+	max(ExpPontuacao.totalPresenca) as MaximoPontuacao.totalPresenca,  max(ExpPontuacao.UltimoPresenca)   as MaximoPontuacao.UltimoPresenca,
+	max(ExpPontuacao.TendenciaPresenca) as MaximoPontuacao.TendenciaPresenca,
+	
+	//PROPOSICOES
+	max(ExpPontuacao.ProposicaoTotal)  as MaximoPontuacao.ProposicaoTotal, max(ExpPontuacao.ProposicaoUltimo)   as MaximoPontuacao.ProposicaoUltimo,
+	 max(ExpPontuacao.ProposicaoTendencia) as MaximoPontuacao.ProposicaoTendencia
+	**/
+	ExpPontuacao.ProposicaoTendencia  ,
+	ExpPontuacao.ProposicaoUltimo  ,
+	ExpPontuacao.ProposicaoTotal  ,
+	ExpPontuacao.TendenciaPresenca  ,
+	ExpPontuacao.UltimoPresenca , 	
+	(ExpPontuacao.UltimoPresenca / $(UltimoPresenca))*25 as ExpPontuacao.UltimoPresencaCalculado , 
+	
+	ExpPontuacao.totalPresenca  ,
+	ExpPontuacao.Cidade,
+	ExpPontuacao.Cargo,
+	ExpPontuacao.DataNascimento,
+	ExpPontuacao.Titulo,
+	ExpPontuacao.AnoEleicao,
+	ExpPontuacao.Sexo,
+	ExpPontuacao.Partido,
+	ExpPontuacao.nome,
+	ExpPontuacao.uf,
+	ExpPontuacao.ideCadastro ,
+	ExpPontuacao.DataInicio,
+	ExpPontuacao.DataFim
+	 from qvd\transformador\ExpPontuacao.qvd (qvd);
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+
+/*
+//PRESENCA
+	
+		//Total de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		TituloPolitico as ExpPontuacao.TituloPolitico,sum(total) as ExpPontuacao.totalPresenca ,Week(DataPresenca) 
+		resident Presenca 
+			where ("DataPresenca" >= '$(tendencia)') and ("DataPresenca" <= '$(inicial)')  and  frequenciaPresenca='Presença' group by TituloPolitico,Week(DataPresenca);
+		exit script;
+		//ULTIMO
+		left join(ExpPontuacao)
+		load  distinct 
+		TituloPolitico as ExpPontuacao.TituloPolitico,sum(total) as ExpPontuacao.UltimoPresenca  
+		resident Presenca where 
+			("DataPresenca" >= '$(ultimo)') and ("DataPresenca" <= '$(inicial)')  and 
+			frequenciaPresenca='Presença' group by TituloPolitico;
+			
+		
+		//TENDENCIA
+		left join(ExpPontuacao)
+		load  distinct 
+		TituloPolitico as ExpPontuacao.TituloPolitico,sum(total)/4 as ExpPontuacao.TendenciaPresenca  
+		resident Presenca where 
+			("DataPresenca" >= '$(tendencia)') and ("DataPresenca" <= '$(ultimo)')  and 
+			frequenciaPresenca='Presença' group by TituloPolitico;
+		
+	
+	
+	//PROPOSICAO	
+		//Total de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(ideCadastro) as ExpPontuacao.ProposicaoTotal  
+		resident Proposicao where ("Proposicao.datApresentacao" >= '$(tendencia)') and ("Proposicao.datApresentacao" <= '$(inicial)') 
+			group by ideCadastro;
+		
+		//ULTIMO
+		left join(ExpPontuacao)
+		load  distinct 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(ideCadastro) as ExpPontuacao.ProposicaoUltimo  
+		resident Proposicao where ("Proposicao.datApresentacao" >= '$(ultimo)') and ("Proposicao.datApresentacao" <= '$(inicial)') 
+			group by ideCadastro;
+		
+		//TENDENCIA		
+		left join(ExpPontuacao)
+		load  distinct 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(ideCadastro)/4 as ExpPontuacao.ProposicaoTendencia  
+		resident Proposicao where ("Proposicao.datApresentacao" >= '$(tendencia)') and ("Proposicao.datApresentacao" <= '$(ultimo)') 
+			group by ideCadastro;
+	
+		
+	store ExpPontuacao into [qvd\transformador\ExpPontuacao.qvd];
+	drop table ExpPontuacao;
+	
+	*/

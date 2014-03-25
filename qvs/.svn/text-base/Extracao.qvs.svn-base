@@ -1,0 +1,240 @@
+
+IF  '$(vExtracao)'='T' THEN
+	
+	
+
+	//LET y=num(Today());
+	
+	//EXTRACAO DAS PRESENCAS
+	
+	FOR i=$(inicio) to $(fim)
+		
+		let z=date($(i),'DD/MM/YYYY'); // i had to put this line to didnt have problems with the file name.
+		let txt=date($(i),'YYYYMMDD');
+		
+		parlamentar:
+		LOAD carteiraParlamentar,
+		    nomeParlamentar,
+		    siglaPartido,
+		    siglaUF,
+		    descricaoFrequenciaDia,
+		    justificativa,
+		    presencaExterna,
+		    %Key_dia_904776C647E95CD0 as diaKey,    // Key to parent table: dia
+		    %Key_parlamentar_B1783E991544261E as parKey    // Key for this table: dia/parlamentares/parlamentar
+		FROM [http://www.camara.gov.br/sitcamaraws/SessoesReunioes.asmx/ListarPresencasDia?data=$(z)&numMatriculaParlamentar=&parteNomeParlamentar=&siglaPartido=&siglaUF=] (XmlSimple, Table is [dia/parlamentares/parlamentar]);
+	
+		dia:
+		LOAD data,
+		    qtdeSessoesDia,
+		    legislatura,
+		    %Key_dia_904776C647E95CD0 as diaKey    // Key for this table: dia
+		FROM [http://www.camara.gov.br/sitcamaraws/SessoesReunioes.asmx/ListarPresencasDia?data=$(z)&numMatriculaParlamentar=&parteNomeParlamentar=&siglaPartido=&siglaUF=] (XmlSimple, Table is [dia]);
+		
+		sessaoDia:	
+		LOAD inicio,
+		$(i) as dia,
+		    descricao,
+		    frequencia,
+		    %Key_parlamentar_B1783E991544261E as parKey   // Key to parent table: dia/parlamentares/parlamentar
+		FROM [http://www.camara.gov.br/sitcamaraws/SessoesReunioes.asmx/ListarPresencasDia?data=$(z)&numMatriculaParlamentar=&parteNomeParlamentar=&siglaPartido=&siglaUF=] (XmlSimple, Table is [dia/parlamentares/parlamentar/sessoesDia/sessaoDia]);
+	
+	
+		resultadoPresenca:
+		load  nomeParlamentar as Politico,parKey, diaKey resident parlamentar; 
+		
+		Left Join (resultadoPresenca)
+		load frequencia as frequenciaPresenca, descricao as descricaoPresenca,parKey  resident sessaoDia; 
+		
+		Left Join (resultadoPresenca)
+		load qtdeSessoesDia as total,data as DataPresenca,diaKey  resident dia;
+		
+		store resultadoPresenca into [qvd\extrator\resultadoPresenca-$(txt).qvd];
+			
+		drop table resultadoPresenca;
+		drop table parlamentar;
+		drop table sessaoDia;
+		drop table dia;
+	
+	NEXT i
+	
+	
+	
+	//EXTRACAO OBTER DEPUTADOS
+	//http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDeputados
+	deputado:
+	LOAD ideCadastro,
+	    matricula,
+	    idParlamentar,
+	    nome,
+	    nomeParlamentar,
+	    sexo,
+	    uf,
+	    partido,
+	    gabinete,
+	    anexo,
+	    fone,
+	    email,
+	    %Key_deputado_1F42ADA0BE275A4C    // Key for this table: deputados/deputado
+	FROM [http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDeputados] (XmlSimple, Table is [deputados/deputado]);
+	// End of [ObterDeputados.asmx/obterdeputados] LOAD statements
+	
+	store deputado into [qvd\extrator\deputado.qvd];
+	drop table deputado;
+	
+	
+	
+	//EXTRACAO 
+	//http://www.camara.gov.br/SitCamaraWS/Deputados.asmx
+	// Start of [ObterDeputados.asmx/obterdeputados] LOAD statements - PEGAR NIVEL DE PARTICIPACAO EM COMISSOES
+	//'titular/comissao':
+	//LOAD nome,
+	//    sigla,
+	//    %Key_deputado_1F42ADA0BE275A4C    // Key to parent table: deputados/deputado
+	//FROM [http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDeputados] (XmlSimple, Table is [deputados/deputado/comissoes/titular/comissao]);
+	//
+	//'suplente/comissao':
+	//LOAD nome,
+	//    sigla,
+	//    %Key_deputado_1F42ADA0BE275A4C    // Key to parent table: deputados/deputado
+	//FROM [http://www.camara.gov.br/SitCamaraWS/Deputados.asmx/ObterDeputados] (XmlSimple, Table is [deputados/deputado/comissoes/suplente/comissao]);
+	
+	
+	
+	
+	//CANDIDATURAS DO TSE
+	Candidaturas:
+	LOAD @1 as DATA_GERACAO, 
+	     @2 as HORA_GERACAO, 
+	     @3 as ANO_ELEICAO, 
+	     @4 as NUM_TURNO, 
+	     @5 as DESCRICAO_ELEICAO, 
+	     @6 as SIGLA_UF, 
+	     @7 as SIGLA_UE, 
+	     @8 as DESCRICAO_UE, 
+	     @9 as CODIGO_CARGO, 
+	     @10 as DESCRICAO_CARGO, 
+	     @11 as NOME_CANDIDATO, 
+	     @12 as SEQUENCIAL_CANDIDATO, 
+	     @13 as NUMERO_CANDIDATO, 
+	     @14 as NOME_URNA_CANDIDATO, 
+	     @15 as COD_SITUACAO_CANDIDATURA, 
+	     @16 as DES_SITUACAO_CANDIDATURA, 
+	     @17 as NUMERO_PARTIDO, 
+	     @18 as SIGLA_PARTIDO, 
+	     @19 as NOME_PARTIDO, 
+	     @20 as CODIGO_LEGENDA, 
+	     @21 as SIGLA_LEGENDA, 
+	     @22 as COMPOSICAO_LEGENDA, 
+	     @23 as NOME_LEGENDA, 
+	     @24 as CODIGO_OCUPACAO, 
+	     @25 as DESCRICAO_OCUPACAO, 
+	     @26 as DATA_NASCIMENTO, 
+	     @27 as NUM_TITULO_ELEITORAL_CANDIDATO, 
+	     @28 as IDADE_DATA_ELEICAO, 
+	     @29 as CODIGO_SEXO, 
+	     @30 as DESCRICAO_SEXO, 
+	     @31 as COD_GRAU_INSTRUCAO, 
+	     @32 as DESCRICAO_GRAU_INSTRUCAO, 
+	     @33 as CODIGO_ESTADO_CIVIL, 
+	     @34 as DESCRICAO_ESTADO_CIVIL, 
+	     @35 as CODIGO_NACIONALIDADE, 
+	     @36 as DESCRICAO_NACIONALIDADE, 
+	     @37 as SIGLA_UF_NASCIMENTO, 
+	     @38 as CODIGO_MUNICIPIO_NASCIMENTO, 
+	     @39 as NOME_MUNICIPIO_NASCIMENTO, 
+	     @40 as DESPESA_MAX_CAMPANHA, 
+	     @41 as COD_SIT_TOT_TURNO, 
+	     @42 as DESC_SIT_TOT_TURNO
+	FROM cand\consulta_cand_2012\consulta_cand_*_*.txt
+	(txt, codepage is 1252, no labels, delimiter is ';', msq);
+	
+	TRACE --- Exclui os Fatos e Temps ---;
+	//drop table Candidaturas;
+	
+	TRACE --- Carrega o QVD FINAL ---;
+	store Candidaturas into [qvd\extrator\Candidaturas.qvd];
+	
+	
+	
+	
+	
+	
+	
+	
+	// Start of [ListarSiglasTipoProposicao.asmx/listarsiglastipoproposicao] LOAD statements
+	TipoProposicao:
+	LOAD tipoSigla,
+		descricao,
+		ativa ,
+		genero 
+	FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarSiglasTipoProposicao] (XmlSimple, Table is [siglas/silga]);
+
+	store TipoProposicao into [qvd\extrator\TipoProposicao.qvd];
+	// End of [ListarSiglasTipoProposicao.asmx/listarsiglastipoproposicao] LOAD statements
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	//PROPOSICAO	- load *  FROM qvd\transformador\TipoProposicao.qvd (qvd)  where TipoProposicao.ativa='True';
+	LET rowText = NoOfRows('TipoProposicao'); // get the total number of rows in Timeline table	   
+	Set ErrorMode = 0;
+	for i=1 to $(rowText) // loop through every row
+
+			 let text = FieldValue('TipoProposicao.tipoSigla',$(i)); //get the value for "text" field on each row
+			
+
+			trace 'http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarProposicoes?sigla=$(text)&numero=&ano=2013&datApresentacaoIni=$(inicioTexto)&datApresentacaoFim=$(fimTexto)&autor=&parteNomeAutor=&siglaPartidoAutor=&siglaUFAutor=&generoAutor=&codEstado=&codOrgaoEstado=&emTramitacao=';
+          Proposicao:
+			LOAD id,
+				nome as nomePolitico,
+				numero,
+				ano,
+				datApresentacao,
+				txtEmenta,
+				txtExplicacaoEmenta,
+				qtdAutores,
+				indGenero,
+				$(mesAno) as mesAno,
+				qtdOrgaosComEstado,
+				[situacao/id],
+				[situacao/descricao] as descricao,
+				[situacao/principal/codProposicaoPrincipal] as codProposicaoPrincipal,
+				[situacao/principal/proposicaoPrincipal] as proposicaoPrincipal,
+				[situacao/orgao/codOrgaoEstado] as codOrgaoEstado,
+				[situacao/orgao/siglaOrgaoEstado] as siglaOrgaoEstado,
+				[ultimoDespacho/datDespacho] as datDespacho,
+				[ultimoDespacho/txtDespacho] as txtDespacho,
+				[autor1/txtNomeAutor] as txtNomeAutor,
+				[autor1/idecadastro] as ideCadastro,
+				[autor1/codPartido] as codPartido,
+				[autor1/txtSiglaPartido] as txtSiglaPartido,
+				[autor1/txtSiglaUF] as txtSiglaUF,
+				[apreciacao/id],
+				[apreciacao/txtApreciacao] as txtApreciacao,
+				[regime/codRegime] as codRegime,
+				[regime/txtRegime] as txtRegime,
+				[orgaoNumerador/id],
+				[orgaoNumerador/sigla],
+				[orgaoNumerador/nome],
+				[tipoProposicao/id],
+				[tipoProposicao/sigla],
+				[tipoProposicao/nome]
+			FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarProposicoes?sigla=$(text)&numero=&ano=2013&datApresentacaoIni=$(inicioTexto)&datApresentacaoFim=$(fimTexto)&autor=&parteNomeAutor=&siglaPartidoAutor=&siglaUFAutor=&generoAutor=&codEstado=&codOrgaoEstado=&emTramitacao=] (XmlSimple, Table is [proposicoes/proposicao]);
+
+		TRACE --- Proposicao $(text)  ---;
+
+	NEXT i
+
+	store Proposicao into [qvd\extrator\ProposicaoCompleta-$(mesAno).qvd];
+	
+	
+	
+
+	
+ENDIF

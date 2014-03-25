@@ -1,0 +1,83 @@
+
+IF  '$(vExtracao)'='T' THEN
+
+	
+	TRACE --- DESPESAS  ---;
+	Despesas:
+	LOAD txNomeParlamentar,
+	    nuCarteiraParlamentar,
+	    nuLegislatura,
+	    sgUF,
+	    sgPartido,
+	    codLegislatura,
+	    numSubCota,
+	    txtDescricao,
+	    numEspecificacaoSubCota,
+	    txtDescricaoEspecificacao,
+	    txtBeneficiario,
+	    txtCNPJCPF,
+	    txtNumero,
+	    indTipoDocumento,
+	    datEmissao,
+	    vlrDocumento,
+	    vlrGlosa,
+	    vlrLiquido,
+	    numMes,
+	    numAno,
+	    numParcela,
+	    numLote,
+	    numRessarcimento,
+	    ideCadastro,
+	    txtPassageiro,
+	    txtTrecho,
+	    %Key_orgao_A04EE003997E6B70    
+	FROM bases\Despesas\AnoAtual.xml (XmlSimple, Table is [orgao/DESPESAS/DESPESA]);
+	join(Despesas)
+	LOAD nome as NomeOrgao,
+	    %Key_orgao_A04EE003997E6B70   
+	FROM bases\Despesas\AnoAtual.xml (XmlSimple, Table is [orgao]);
+
+	
+	Concatenate
+	
+	LOAD txNomeParlamentar,
+	    nuCarteiraParlamentar,
+	    nuLegislatura,
+	    sgUF,
+	    sgPartido,
+	    codLegislatura,
+	    numSubCota,
+	    txtDescricao,
+	    numEspecificacaoSubCota,
+	    txtDescricaoEspecificacao,
+	    txtBeneficiario,
+	    txtCNPJCPF,
+	    txtNumero,
+	    indTipoDocumento,
+	    datEmissao,
+	    vlrDocumento,
+	    vlrGlosa,
+	    vlrLiquido,
+	    numMes,
+	    numAno,
+	    numParcela,
+	    numLote,
+	    numRessarcimento,
+	    ideCadastro,
+	    txtPassageiro,
+	    txtTrecho,
+	    %Key_orgao_A04EE003997E6B70    
+	FROM bases\Despesas\AnoAnterior.xml (XmlSimple, Table is [orgao/DESPESAS/DESPESA]);
+	join(Despesas)
+	LOAD nome as NomeOrgao,
+	    %Key_orgao_A04EE003997E6B70   
+	FROM bases\Despesas\AnoAnterior.xml (XmlSimple, Table is [orgao]);
+	
+
+	
+	store Despesas into [qvd\extrator\Despesas.qvd];
+	drop table Despesas;
+	TRACE --- DESPESAS: Carrega o QVD FINAL ---;
+	
+	
+ENDIF

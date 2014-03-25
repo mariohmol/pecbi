@@ -1,0 +1,55 @@
+Function RegExTest(iString, Pattern, IgnoreCase)
+ ' Returns TRUE if Pattern can be matched to iString	
+
+ ' iString: string, the input string to search in
+ ' Pattern: string, the regular expression pattern to search for
+ ' IgnoreCase: boolean, indicates if search should be case-sensitive
+
+  set RE = New RegExp
+  RE.Pattern = Pattern
+  RE.IgnoreCase = IgnoreCase
+  RegExTest = RE.Test(iString)
+
+End Function
+
+
+Function RegExReplace(iString, sPattern, rPattern) 
+	' Replaces any occurence of sPattern within the string iString with rPattern
+	' and returns the modified string, if no match is found the original string
+	' is returned
+	
+	' iString: string, the input string to search and replace in
+	' sPattern: string, the pattern to search for
+	' rPattern: string, the pattern to replace the found pattern with
+	
+	set RE = New RegExp
+	RE.Pattern = sPattern
+	RE.Global = True
+	RegExReplace = RE.Replace(iString, rPattern)
+
+End Function
+
+
+Function RegExFind(iString, Pattern, Separator, IgnoreCase)
+	' Returns a string containing the matches that were found by searching for Pattern in iString.
+	' If more than 1 match was found, the results are separated by the character(s) specified in Separator
+	
+	' iString: string, the input string to search
+	' Pattern: string, the pattern to search for
+	' Separator: string, the character(s) to use for separating results
+	' IgnoreCase: boolean, indicates if the search should be case-sensitive
+
+	set RE = New RegExp
+    RE.Pattern = Pattern
+    RE.IgnoreCase = IgnoreCase
+    RE.Global = True
+    
+    set Found = RE.Execute(iString)
+
+    for i = 0 To Found.Count - 1
+        Result = Result & Found(i).Value & Separator
+    next
+        
+    RegExFind = left(Result, len(Result)-1)
+    
+End Function

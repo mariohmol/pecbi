@@ -1,0 +1,65 @@
+
+
+//VARIAVEIS DE EXECUCAO
+/*
+LET inicio=Date#('01/06/2013','DD/MM/YYYY');
+LET fim=Date#('30/06/2013','DD/MM/YYYY');
+LET mesAno='062013';
+SET inicioTexto='01/06/2013';
+SET fimTexto='30/06/2013';
+SET anoTexto='2013';
+*/
+
+/*
+LET inicio=Date#('01/07/2013','DD/MM/YYYY');
+LET fim=Date#('31/07/2013','DD/MM/YYYY');
+LET mesAno='072013';
+SET inicioTexto='01/07/2013';
+SET fimTexto='31/07/2013';
+SET anoTexto='2013';
+*/
+
+
+/*
+LET inicio=Date#('01/08/2013','DD/MM/YYYY');
+LET fim=Date#('31/08/2013','DD/MM/YYYY');
+LET mesAno='082013';
+SET inicioTexto='01/08/2013';
+SET fimTexto='31/08/2013';
+SET anoTexto='2013';
+*/
+
+/*
+LET inicio=Date#('01/09/2013','DD/MM/YYYY');
+LET fim=Date#('30/09/2013','DD/MM/YYYY');
+LET mesAno='092013';
+SET inicioTexto='01/09/2013';
+SET fimTexto='30/09/2013';
+SET anoTexto='2013';
+*/
+
+/*
+LET inicio=Date#('01/10/2013','DD/MM/YYYY');
+LET fim=Date#('31/10/2013','DD/MM/YYYY');
+LET mesAno='102013';
+SET inicioTexto='01/10/2013';
+SET fimTexto='31/10/2013';
+SET anoTexto='2013';
+*/
+
+/*
+LET inicio=Date#('01/11/2013','DD/MM/YYYY');
+LET fim=Date#('30/11/2013','DD/MM/YYYY');
+LET mesAno='112013';
+SET inicioTexto='01/11/2013';
+SET fimTexto='30/11/2013';
+SET anoTexto='2013';
+*/
+
+
+SET inicioTexto='01/12/2013';
+SET fimTexto='31/12/2013';
+LET inicio=Date#('01/12/2013','DD/MM/YYYY');
+LET fim=Date#('31/12/2013','DD/MM/YYYY');
+LET mesAno='122013';
+SET anoTexto='2013';

@@ -1,0 +1,215 @@
+
+	
+
+IF  '$(vPontuacao)'='T' THEN
+	
+	//let ultimo=Date(inicial - (7 * 1), 'DD/MM/YYYY'); //date($(y),'DD/MM/YYYY');
+	//let tendencia=Date(inicial - (7 * 5), 'DD/MM/YYYY'); //date($(y),'DD/MM/YYYY');
+
+	//Agrupando proposicoes para nao haver duplicadas
+	ProposicaoAgrupado:
+	load distinct Proposicao.nomePolitico,ideCadastro, count(1),Date(Min(Proposicao.datApresentacao),'MM/DD/YYYY') as Proposicao.datApresentacao
+
+	 FROM qvd\transformador\Proposicao.qvd (qvd) group by Proposicao.nomePolitico,ideCadastro;	
+
+ 
+
+	ExpPontuacao:
+	//Dados do Candidato
+	load 
+		Candidaturas.DESCRICAO_UE as ExpPontuacao.Cidade,
+		Candidaturas.DESCRICAO_CARGO as ExpPontuacao.Cargo,
+		Candidaturas.DATA_NASCIMENTO as ExpPontuacao.DataNascimento,
+		ApplyMap('NomeDiferente',NOME_CANDIDATO) as ExpPontuacao.Titulo,
+		Candidaturas.ANO_ELEICAO as ExpPontuacao.AnoEleicao,
+		Candidaturas.DESCRICAO_SEXO as ExpPontuacao.Sexo,
+		Candidaturas.NOME_PARTIDO as ExpPontuacao.Partido
+			resident Candidaturas where
+		(Candidaturas.DESC_SIT_TOT_TURNO like 'ELEITO*') and 
+		(Candidaturas.DESCRICAO_CARGO='DEPUTADO FEDERAL' or Candidaturas.DESCRICAO_CARGO='SENADOR'); 
+
+	//Dados do Deputado
+	left join(ExpPontuacao)
+		load  distinct 
+			Deputados.nome as ExpPontuacao.nome,Deputados.uf as ExpPontuacao.uf,Deputados.ideCadastro as ExpPontuacao.ideCadastro ,
+			Deputados.TituloPolitico as ExpPontuacao.TituloPolitico,ApplyMap('NomeDiferente',Deputados.NOME_CANDIDATO) as ExpPontuacao.Titulo,
+			upper(Deputados.TituloPolitico) as ExpPontuacao.TituloPoliticoShort
+		resident Deputados;
+	
+
+		
+		
+		
+	
+	//PRESENCA
+	
+		//Pontos por Semana
+		left join(ExpPontuacao)
+		load  distinct 
+		upper(TituloPolitico) as ExpPontuacao.TituloPoliticoShort,
+		sum(total) as ExpPontuacao.UltimoPresenca ,Year(DataPresenca) as  ExpPontuacao.Ano,
+		ceil(Week(DataPresenca))& '/' & ceil(Year(DataPresenca)) as ExpPontuacao.SemanaAno, 
+		Week(DataPresenca) as ExpPontuacao.Semana ,Week(DataPresenca)-1 as ExpPontuacao.UltimaSemana 
+		resident Presenca 
+			where //("DataPresenca" <= '$(inicial)')  and  
+			frequenciaPresenca='Presença' 
+			group by upper(TituloPolitico),Week(DataPresenca),Year(DataPresenca),Week(DataPresenca)-1 ,ceil(Week(DataPresenca))& '/' & ceil(Year(DataPresenca)) ;
+	
+		/*
+		//Tendencia de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		upper(TituloPolitico) as ExpPontuacao.TituloPoliticoShort,
+		sum(total) as ExpPontuacao.UltimoPresenca ,Year(DataPresenca) as  ExpPontuacao.Ano,
+		ceil(Week(DataPresenca))& '/' & ceil(Year(DataPresenca)) as ExpPontuacao.SemanaAno,
+		sum(total) as ExpPontuacao.TendenciaPresenca ,Year(DataPresenca) as  ExpPontuacao.Ano,
+		Week(DataPresenca) as ExpPontuacao.UltimaSemana 
+		resident Presenca 
+			where //("DataPresenca" <= '$(inicial)')  and  
+			frequenciaPresenca='Presença' 
+			group by upper(TituloPolitico),Week(DataPresenca),Year(DataPresenca),ceil(Week(DataPresenca))& '/' & ceil(Year(DataPresenca)) ;
+		*/
+		
+		//Total de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		upper(TituloPolitico) as ExpPontuacao.TituloPoliticoShort,sum(total) as ExpPontuacao.TotalPresenca 
+		resident Presenca 
+			where //("DataPresenca" <= '$(inicial)')  and  
+			frequenciaPresenca='Presença' group by upper(TituloPolitico) ;
+	
+	
+	//PROPOSICAO	
+		//Pontos por Semana
+		left join(ExpPontuacao)
+		load  distinct 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(1) as ExpPontuacao.UltimoProposicao  ,
+		ceil(Week(Proposicao.datApresentacao))& '/' & ceil(Year(Proposicao.datApresentacao)) as ExpPontuacao.SemanaAno, 
+		Year(Proposicao.datApresentacao) as ExpPontuacao.Ano,
+		Week(Proposicao.datApresentacao) as ExpPontuacao.Semana,Week(Proposicao.datApresentacao)-1 as ExpPontuacao.UltimaSemana
+		resident ProposicaoAgrupado //where ("Proposicao.datApresentacao" <= '$(inicial)') 
+			group by ideCadastro,Week(Proposicao.datApresentacao),Year(Proposicao.datApresentacao),Week(Proposicao.datApresentacao)-1,
+			ceil(Week(Proposicao.datApresentacao))& '/' & ceil(Year(Proposicao.datApresentacao));
+		
+		/*		
+		//Tendencia de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		ceil(Week(Proposicao.datApresentacao))& '/' & ceil(Year(Proposicao.datApresentacao)) as ExpPontuacao.SemanaAno, 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(ideCadastro) as ExpPontuacao.TendenciaProposicao  ,
+		Year(Proposicao.datApresentacao) as ExpPontuacao.Ano,
+		Week(Proposicao.datApresentacao) as ExpPontuacao.UltimaSemana
+		resident ProposicaoAgrupado //where ("Proposicao.datApresentacao" <= '$(inicial)') 
+			group by ideCadastro,Week(Proposicao.datApresentacao),Year(Proposicao.datApresentacao)
+			,ceil(Week(Proposicao.datApresentacao))& '/' & ceil(Year(Proposicao.datApresentacao));
+		*/
+	
+	
+		//Total de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(1) as ExpPontuacao.TotalProposicao  ,
+		Year(Proposicao.datApresentacao) as ExpPontuacao.Ano 
+		resident ProposicaoAgrupado //where ("Proposicao.datApresentacao" <= '$(inicial)') 
+			group by ideCadastro,Year(Proposicao.datApresentacao);
+		
+		drop table ProposicaoAgrupado;
+		
+	//DESPESAS
+		//Pontos por Semana
+		left join(ExpPontuacao)
+		load  distinct 
+		ceil(Week(Despesas.Data))& '/' & ceil(Year(Despesas.Data)) as ExpPontuacao.SemanaAno, 
+		ideCadastro as ExpPontuacao.ideCadastro ,sum(Despesas.vlrLiquido) as ExpPontuacao.UltimoDespesa  ,
+		Year(Despesas.Data) as ExpPontuacao.Ano,
+		Week(Despesas.Data) as ExpPontuacao.Semana,Week(Despesas.Data)-1 as ExpPontuacao.UltimaSemana
+		resident Despesa 
+			group by ideCadastro,Week(Despesas.Data),Year(Despesas.Data),ceil(Week(Despesas.Data))& '/' & ceil(Year(Despesas.Data)),
+			Week(Despesas.Data)-1;
+		
+		/*
+		//Tendencia de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		ceil(Week(Despesas.Data))& '/' & ceil(Year(Despesas.Data)) as ExpPontuacao.SemanaAno, 
+		ideCadastro as ExpPontuacao.ideCadastro ,sum(Despesas.vlrLiquido) as ExpPontuacao.TendenciaDespesa  ,
+		Year(Despesas.Data) as ExpPontuacao.Ano,
+		Week(Despesas.Data) as ExpPontuacao.UltimaSemana
+		resident Despesa 
+			group by ideCadastro,Week(Despesas.Data),Year(Despesas.Data),ceil(Week(Despesas.Data))& '/' & ceil(Year(Despesas.Data))
+			;	
+		*/
+	
+		//Total de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		Year(Despesas.Data) as ExpPontuacao.Ano,
+		ideCadastro as ExpPontuacao.ideCadastro ,sum(Despesas.vlrLiquido) as ExpPontuacao.TotalDespesa  
+		resident Despesa 
+			group by ideCadastro,Year(Despesas.Data);
+	
+	//PROCESSOS
+		//Pontos por Semana
+		left join(ExpPontuacao)
+		load  distinct 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(Processos.Id) as ExpPontuacao.UltimoProcesso  
+		//,		Week(Despesas.datEmissao) as ExpPontuacao.Semana,Week(Despesas.datEmissao)-1 as ExpPontuacao.UltimaSemana
+		resident ProcessosAbertos 
+			group by ideCadastro; //,Week(Despesas.datEmissao);
+		
+		/*
+		//Tendencia de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(Processos.Id) as ExpPontuacao.TendenciaProcesso  
+		//,		Week(Despesas.datEmissao) as ExpPontuacao.UltimaSemana
+		resident ProcessosAbertos 
+			group by ideCadastro; //,Week(Despesas.datEmissao);
+		*/
+		
+		//Total de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(Processos.Id) as ExpPontuacao.TotalProcesso  
+		resident ProcessosAbertos 
+			group by ideCadastro;
+	
+
+	
+		//VOTACAO
+		//Pontos por Semana
+		left join(ExpPontuacao)
+		load  distinct 
+		ceil(Week(VotacaoDeputado.Data))& '/' & ceil(Year(VotacaoDeputado.Data)) as ExpPontuacao.SemanaAno, 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(VotacaoDeputado.Hora) as ExpPontuacao.UltimoVotacao ,
+		Year(VotacaoDeputado.Data) as ExpPontuacao.Ano,
+		Week(VotacaoDeputado.Data) as ExpPontuacao.Semana,Week(VotacaoDeputado.Data)-1 as ExpPontuacao.UltimaSemana
+		resident VotacaoDeputado 
+			group by ideCadastro,Week(VotacaoDeputado.Data),Year(VotacaoDeputado.Data),Week(VotacaoDeputado.Data)-1,
+			ceil(Week(VotacaoDeputado.Data))& '/' & ceil(Year(VotacaoDeputado.Data));
+				
+		/*	
+		//Tendencia de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		ceil(Week(VotacaoDeputado.Data))& '/' & ceil(Year(VotacaoDeputado.Data)) as ExpPontuacao.SemanaAno, 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(VotacaoDeputado.Hora) as ExpPontuacao.TendenciaVotacao,
+		Year(VotacaoDeputado.Data) as ExpPontuacao.Ano,		
+		Week(VotacaoDeputado.Data) as ExpPontuacao.UltimaSemana
+		resident VotacaoDeputado 
+			group by ideCadastro,Week(VotacaoDeputado.Data),Year(VotacaoDeputado.Data),ceil(Week(VotacaoDeputado.Data))& '/' & ceil(Year(VotacaoDeputado.Data));
+		*/
+		
+		//Total de Pontos
+		left join(ExpPontuacao)
+		load  distinct 
+		ideCadastro as ExpPontuacao.ideCadastro ,count(VotacaoDeputado.Hora) as ExpPontuacao.TotalVotacao  ,Year(VotacaoDeputado.Data) as  ExpPontuacao.Ano
+		resident VotacaoDeputado 
+			group by ideCadastro,Year(VotacaoDeputado.Data);
+			
+	
+	
+	store ExpPontuacao into [qvd\transformador\ExpPontuacao.qvd] (qvd);
+	drop table ExpPontuacao;
+	
+ENDIF

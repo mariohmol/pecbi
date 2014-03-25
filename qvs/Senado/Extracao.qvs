@@ -1,0 +1,88 @@
+
+IF  '$(vExtracao)'='T' THEN
+	
+	
+	
+	
+exit script;
+
+	
+	//Despesas: 109877
+	//Arquivo CSV com todos os gastos de 2013
+	//http://www.senado.gov.br/transparencia/sen/verba/verbaAno.asp
+	DespesasSenado:
+	LOAD ANO, 
+	     MES, 
+	     SENADOR, 
+	     TIPO_DESPESA, 
+	     CNPJ_CPF, 
+	     FORNECEDOR, 
+	     DOCUMENTO, 
+	     DATA, 
+	     DETALHAMENTO, 
+	     VALOR_REEMBOLSADO
+	FROM
+	bases\Senado\2013.csv
+	(txt, codepage is 1252, embedded labels, delimiter is ';', msq, header is 1 lines);
+	store DespesasSenado into qvd\extrator\Senado\DespesasSenado2013.qvd(qvd);
+	drop table DespesasSenado;
+
+
+	//EXTRACAO DAS VOTACOES
+		
+	let vDays = num#(fim - inicio);
+	FOR i = 0 to vDays
+
+		let z = Date(fim - vDays + i, 'DD/MM/YYYY');
+		let txt = Date(fim - vDays + i, 'YYYYMMDD');
+	  
+		//Votações: 101
+		SiglaCasa:
+		LOAD SiglaCasa%Table,
+		    %Key_Votacao_5F252EF7D6BC57EF    // Key to parent table: ListaVotacoes/Votacoes/Votacao
+		FROM [http://legis.senado.gov.br/dadosabertos/plenario/lista/votacao/$(txt)] (XmlSimple, Table is [ListaVotacoes/Votacoes/Votacao/SiglaCasa]);
+
+		left join(SiglaCasa)
+		LOAD CodigoParlamentar,
+		    NomeParlamentar,
+		    SexoParlamentar,
+		    SiglaPartido,
+		    SiglaUF,
+		    Url,
+		    Foto,
+		    Tratamento,
+		    Voto,
+		    %Key_Votacao_5F252EF7D6BC57EF    // Key to parent table: ListaVotacoes/Votacoes/Votacao
+		FROM [http://legis.senado.gov.br/dadosabertos/plenario/lista/votacao/$(txt)] (XmlSimple, Table is [ListaVotacoes/Votacoes/Votacao/Votos/VotoParlamentar]);
+
+		left join(SiglaCasa)
+		LOAD CodigoSessao,
+		    CodigoSessaoLegislativa,
+		    TipoSessao,
+		    NumeroSessao,
+		    DataSessao,
+		    HoraInicio,
+		    CodigoTramitacao,
+		    CodigoSessaoVotacao,
+		    SequencialSessao,
+		    Secreta,
+		    DescricaoVotacao,
+		    Resultado,
+		    CodigoMateria,
+		    SiglaMateria,
+		    NumeroMateria,
+		    AnoMateria,
+		    %Key_ListaVotacoes_4495E558F7CE7915,    // Key to parent table: ListaVotacoes
+		    %Key_Votacao_5F252EF7D6BC57EF    // Key for this table: ListaVotacoes/Votacoes/Votacao
+		FROM [http://legis.senado.gov.br/dadosabertos/plenario/lista/votacao/$(txt)] (XmlSimple, Table is [ListaVotacoes/Votacoes/Votacao]);
+		
+		trace 'http://legis.senado.gov.br/dadosabertos/plenario/lista/votacao/$(txt)';
+	
+		store SiglaCasa into qvd\extrator\Senado\Votacao\$(txt).qvd(qvd);
+		drop table SiglaCasa;
+	
+	NEXT i
+	
+	
+ENDIF
+

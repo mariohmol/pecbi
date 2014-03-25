@@ -1,0 +1,179 @@
+
+IF  '$(vExtracao)'='T' THEN
+
+
+	TRACE --- VOTACAO ---;
+	
+	
+	let vDays = num#(fim - inicio);
+	FOR i = 0 to vDays
+		
+		let mesAnoTemp = Date(fim, 'MM/YYYY');
+		let z = Date(fim - vDays + i, 'DD/MM/YYYY');
+		let txt = Date(fim - vDays + i, 'YYYYMMDD');
+		let dia = i +1;
+		let i=i + 7;
+		let	diaFinal= Date(fim, 'DD');
+		let diaFimSemana = i;
+		if $(diaFinal) < $(diaFimSemana) then
+			let	diaFimSemana=$(diaFinal);
+		end if
+		
+		trace 'http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarProposicoesTramitadasNoPeriodo?dtInicio=$(dia)/$(mesAnoTemp)&dtFim=$(diaFimSemana)/$(mesAnoTemp)';
+		
+		ProposicaoTramitada:
+		LOAD codProposicao,
+			tipoProposicao,
+			numero,
+			ano
+		FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarProposicoesTramitadasNoPeriodo?dtInicio=$(dia)/$(mesAnoTemp)&dtFim=$(diaFimSemana)/$(mesAnoTemp)] (XmlSimple, Table is [proposicoes/proposicao]);
+		
+
+		trace 'De $(dia) até $(diaFimSemana)';
+	NEXT i
+	store ProposicaoTramitada into [qvd\extrator\ProposicaoTramitada-$(mesAno).qvd];
+	
+	
+	
+	
+	trace --- ProposicaoVotada ----;
+	ProposicaoVotadaWS:
+	LOAD codProposicao,
+		nomeProposicao
+	FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarProposicoesVotadasEmPlenario?ano=$(anoTexto)&tipo=] (XmlSimple, Table is [proposicoes/proposicao]);
+	trace 'http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarProposicoesVotadasEmPlenario?ano=$(anoTexto)&tipo=';
+
+
+	
+	ProposicaoVotadaTmp:
+	load *
+		,
+		
+		SubField(
+				RegExFind([nomeProposicao] , '\w+ ', ';') 
+			,';') as tipo
+		
+		,
+		
+		SubField(
+				MapSubString('ProposicaoChrMap', 
+					RegExFind([nomeProposicao] , '/(\d{4})', ';')
+				) 
+			,';') as ano
+		
+		,
+		
+		SubField(
+				RegExFind([nomeProposicao] , ' \d+', ';') 
+			,';') as id
+	resident ProposicaoVotadaWS;
+
+	drop table ProposicaoVotadaWS;
+	
+	NoConcatenate	
+
+	ProposicaoVotada:
+		load distinct 
+		codProposicao as ProposicaoVotada.codProposicao,
+		nomeProposicao as ProposicaoVotada.nomeProposicao,
+		left(tipo,3) as ProposicaoVotada.tipo,
+		ano as ProposicaoVotada.ano,
+		id as ProposicaoVotada.id
+	 resident ProposicaoVotadaTmp where IsNum(ano) and not  IsNum(tipo);
+
+	store ProposicaoVotada into [qvd\extrator\ProposicaoVotada.qvd];
+
+	drop table ProposicaoVotadaTmp;
+	
+	//exit script;
+	
+	//	- load *  FROM qvd\transformador\TipoProposicao.qvd (qvd)  where TipoProposicao.ativa='True' and TipoProposicao.tipoSigla<>'';
+	LET rowText = NoOfRows('ProposicaoVotada'); 
+	Set ErrorMode = 0;
+	for i=1 to $(rowText) // loop through every row
+	
+		 let ProposicaoVotadaId = trim(peek('ProposicaoVotada.id', i,'ProposicaoVotada'));
+		 let ProposicaoVotadaAno = trim(peek('ProposicaoVotada.ano', i,'ProposicaoVotada')); 
+		 let ProposicaoVotadaTipo = trim(peek('ProposicaoVotada.tipo', i,'ProposicaoVotada')); 
+		 
+		let url = 'http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ObterVotacaoProposicao?tipo=$(ProposicaoVotadaTipo)&numero=$(ProposicaoVotadaId)&ano=$(ProposicaoVotadaAno)';
+		
+		TRACE --- WS $(url)  ---;
+	
+		// Start of [ObterVotacaoProposicao?tipo=PL&numero=4529&ano=2004.asmx/obtervotacaoproposicao?tipo=pl&numero=4529&ano=2004] LOAD statements		
+		
+		//NoConcatenate			
+		//bancada:
+		//LOAD Sigla,			    orientacao,			    %Key_proposicao_3A3C13BE90F56BDA    // Key to parent table: proposicao
+		//FROM [$(url)] (XmlSimple, Table is [proposicao/Votacoes/Votacao/orientacaoBancada/bancada]);
+	
+		
+		
+		NoConcatenate 
+					
+		
+		DeputadoTmp:
+		LOAD Nome,
+			ideCadastro,
+			Partido,
+			UF,
+			Voto,
+			%Key_Votacao_F7152F3C01FFE75C    // Key to parent table: proposicao/Votacoes/Votacao
+		FROM [$(url)] (XmlSimple, Table is [proposicao/Votacoes/Votacao/votos/Deputado]);
+		
+		left join(DeputadoTmp)
+		LOAD Resumo,
+			Data,
+			Hora,
+			ObjVotacao,
+			%Key_proposicao_3A3C13BE90F56BDA,    // Key to parent table: proposicao
+			%Key_Votacao_F7152F3C01FFE75C    // Key for this table: proposicao/Votacoes/Votacao
+		FROM [$(url)] (XmlSimple, Table is [proposicao/Votacoes/Votacao]);
+		
+		left join(DeputadoTmp)
+		LOAD Sigla,
+			Numero,
+			Ano,
+			%Key_proposicao_3A3C13BE90F56BDA    // Key for this table: proposicao
+		FROM [$(url)] (XmlSimple, Table is [proposicao]);
+
+		
+		
+		NoConcatenate
+		
+		Deputado:
+		load 
+			Nome,
+			ideCadastro,
+			Partido,
+			UF,
+			Voto,
+			Sigla,
+			Numero,
+			Ano,
+			 Resumo,
+			 Data,
+			 Hora,
+			ObjVotacao
+		resident DeputadoTmp;
+		
+		
+		//store bancada into [qvd\extrator\Votacao\VotacaoBancada_$(ProposicaoVotadaTipo)_$(ProposicaoVotadaId)_$(ProposicaoVotadaAno).qvd] (qvd);
+		//drop table bancada;
+		
+		store Deputado into [qvd\extrator\Votacao\VotacaoDeputado_$(ProposicaoVotadaTipo)_$(ProposicaoVotadaId)_$(ProposicaoVotadaAno).qvd] (qvd);
+
+		drop table Deputado;
+		drop table DeputadoTmp;
+			
+		
+
+		TRACE --- ProposicaoVotada $(ProposicaoVotadaTipo)_$(ProposicaoVotadaId)_$(ProposicaoVotadaAno)  ---;
+
+		
+	NEXT i
+	
+	drop table ProposicaoVotada;
+	
+	
+ENDIF

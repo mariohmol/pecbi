@@ -1,0 +1,78 @@
+Fonte:
+
+//http://legis.senado.gov.br/dadosabertos/docs/index.html
+//http://www.senado.gov.br/transparencia/dadosAbertos/dadosAbertos.asp
+
+
+SiglaCasa2:
+
+load 
+distinct 
+SiglaCasa%Table,
+     CodigoSessao,
+    CodigoSessaoLegislativa,
+     TipoSessao,
+    NumeroSessao,
+    DataSessao,
+    HoraInicio,
+    CodigoTramitacao,
+     CodigoSessaoVotacao,
+    SequencialSessao,
+    Secreta,
+    DescricaoVotacao,
+    Resultado,
+    CodigoMateria,
+    SiglaMateria,
+    NumeroMateria,
+    AnoMateria
+ from 
+resident SiglaCasa;
+
+
+
+load 
+distinct
+CodigoParlamentar,
+    NomeParlamentar,
+    Voto,
+    
+ from 
+resident SiglaCasa;
+drop table SiglaCasa;
+
+EXIT script;
+
+
+DIRECTORY;
+$(Must_Include=QVS\Senado\Extracao.qvs);
+
+
+
+
+//Cargos
+//http://www.senado.gov.br/transparencia/rh/servidores/nova_consulta.asp?fnome=&fvinculo=&fsituacao=&flotacao=&fcategoria=&fcargo=0&fsimbolo=&ffuncao=0&fadini=&fadfim=&fconsulta=ok&btnsubmit=Pesquisar
+
+//Presenças: 519
+//http://legis.senado.gov.br/dadosabertos/reuniao/1500
+//http://legis.senado.gov.br/dadosabertos/agenda/20131101/detalhe?colegiado=CAE//
+
+//Candidatos
+//http://legis.senado.gov.br/dadosabertos/senador/lista/atual
+
+//Proposicoes
+//http://legis.senado.gov.br/dadosabertos/autor/lista/atual
+//http://legis.senado.gov.br/dadosabertos/docs/path__materia_pesquisa_lista.html
+//http://legis.senado.gov.br/dadosabertos/materia/pesquisa/lista?nomeAutor=Renan%20Calheiro
+//http://legis.senado.gov.br/dadosabertos/dados/Materias.xml
+
+//Pronunciamentos
+//http://legis.senado.gov.br/dadosabertos/senador/lista/tiposPronunciamento
+
+//Processos: - script pronto
+
+//load * from [qvd\transformador\ExpPontuacaoTotal.qvd] (qvd); EXIT script;
+
+
+
+//http://legis.senado.gov.br/dadosabertos/materia/distribuicao/autoria
+

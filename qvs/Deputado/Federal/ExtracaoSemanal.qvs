@@ -1,0 +1,88 @@
+
+IF  '$(vExtracaoSemanal)'='T' THEN
+	
+
+	
+
+	// Start of [ObterOrgaos.asmx/obterorgaos] LOAD statements
+	Orgao:
+	LOAD id,
+		idTipodeOrgao,
+		sigla,
+		descricao
+	FROM [http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterOrgaos] (XmlSimple, Table is [orgaos/orgao]);
+	// End of [ObterOrgaos.asmx/obterorgaos] LOAD statements
+
+	store Orgao into [qvd\extrator\Orgao.qvd];
+	drop table Orgao;
+	
+	//http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterMembrosOrgao?IDOrgao=2003
+	
+	
+		// Start of [ListarProposicoesVotadasEmPlenario?ano=2013&tipo=.asmx/listarproposicoesvotadasemplenario?ano=2013&tipo=] LOAD statements
+	VotacoesProposicoes:
+	LOAD codProposicao,
+		nomeProposicao
+	FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarProposicoesVotadasEmPlenario?ano=$(anoTexto)&tipo=] (XmlSimple, Table is [proposicoes/proposicao]);
+	// End of [ListarProposicoesVotadasEmPlenario?ano=2013&tipo=.asmx/listarproposicoesvotadasemplenario?ano=2013&tipo=] LOAD statements
+
+
+
+	// Start of [2014.asmx/listarproposicoestramitadasnoperiodo?dtinicio=10/02/2014&dtfim=11/02/2014] LOAD statements
+	UltimasTramitacoes:
+	LOAD codProposicao,
+		tipoProposicao,
+		numero,
+		ano
+	FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarProposicoesTramitadasNoPeriodo?dtInicio=$(inicioTexto)&dtFim=$(fimTexto)] (XmlSimple, Table is [proposicoes/proposicao]);
+	// End of [2014.asmx/listarproposicoestramitadasnoperiodo?dtinicio=10/02/2014&dtfim=11/02/2014] LOAD statements
+
+
+
+	
+	LET rowText = NoOfRows('Proposicao'); // get the total number of rows in Timeline table	   
+	Set ErrorMode = 0;
+	for i=1 to $(rowText) // loop through every row
+	
+	 let numero = peek('Proposicao.numero',$(i),'Proposicao'); 
+	 let ano = peek('Proposicao.ano',$(i),'Proposicao'); 
+	  let sigla = peek('TipoProposicao.tipoSigla',$(i),'Proposicao'); 
+	  
+	  trace 'http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ObterProposicao?tipo=$(sigla)&numero=$(numero)&ano=$(ano)';
+	  
+	IF  '$(numero)'<>'' and '$(ano)'<>'' THEN
+					
+		// Start of [ObterProposicao?tipo=PLP&numero=288&ano=2013.asmx/obterproposicao?tipo=plp&numero=288&ano=2013] LOAD statements
+		ProposicaoDetalhada:
+		LOAD tipo,
+		    numero,
+		    ano,
+		    nomeProposicao,
+		    idProposicao,
+		    nomeProposicaoOrigem,
+		    tipoProposicao,
+		    Ementa,
+		    Autor,
+		    DataApresentacao,
+		    RegimeTramitacao,
+		    UltimoDespacho,
+		    Apreciacao,
+		    Indexacao,
+		    Situacao,
+		    LinkInteiroTeor,
+		    [UltimoDespacho/Data] as Data
+		FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ObterProposicao?tipo=$(sigla)&numero=$(numero)&ano=$(ano)] (XmlSimple, Table is [proposicao]);
+		
+		
+		// End of [ObterProposicao?tipo=PLP&numero=288&ano=2013.asmx/obterproposicao?tipo=plp&numero=288&ano=2013] LOAD statements
+
+		TRACE --- Proposicao Detalhada $(text)  ---;
+	END IF
+	trace 'http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ObterProposicao?tipo=$(sigla)&numero=$(numero)&ano=$(ano)';
+NEXT i
+
+	store ProposicaoDetalhada into [qvd\extrator\ProposicaoDetalhada-$(mesAno).qvd];
+	
+	
+ENDIF
+

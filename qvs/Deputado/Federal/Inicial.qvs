@@ -1,0 +1,76 @@
+SET ThousandSep='.';
+SET DecimalSep=',';
+SET MoneyThousandSep='.';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='R$ #.##0,00;-R$ #.##0,00';
+SET TimeFormat='hh:mm:ss';
+SET DateFormat='DD/MM/YYYY';
+SET TimestampFormat='DD/MM/YYYY hh:mm:ss[.fff]';
+SET MonthNames='jan;fev;mar;abr;mai;jun;jul;ago;set;out;nov;dez';
+SET DayNames='seg;ter;qua;qui;sex;sáb;dom';
+
+
+LET pesoPresenca=0.25;
+LET pesoProposicao=0.25;
+LET pesoDespesa=0.25;
+LET pesoVotacao=0.25;
+LET pesoProcesso=0.25;
+
+
+//VARIAVEIS DE EXECUCAO
+LET inicio=Date#('25/09/2013','DD/MM/YYYY');
+LET fim=Date#('01/09/2013','DD/MM/YYYY');
+LET mesAno='092013';
+SET inicioTexto='01/09/2013';
+SET fimTexto='25/09/2013';
+
+SET vExtracao='F';
+
+SET vTransformacao='F';
+SET vPontuacao='F';
+SET vPontuacaoCalculo='T';
+SET vExportacao='F';
+SET vConvertCSV='F';
+
+SET vView='F';
+
+
+//INCLUDES DE SCRIPTS DE DEPUTADO FEDERAL
+DIRECTORY;
+$(Must_Include=QVS\Deputado\Federal\Mapas.qvs);
+
+DIRECTORY;
+$(Must_Include=QVS\Deputado\Federal\View.qvs);
+
+DIRECTORY;
+$(Must_Include=QVS\Deputado\Federal\Transformador.qvs);
+
+DIRECTORY;
+$(Must_Include=QVS\Deputado\Federal\Pontuacao.qvs);
+
+DIRECTORY;
+$(Must_Include=QVS\Deputado\Federal\PontuacaoCalculo.qvs);
+
+DIRECTORY;
+$(Must_Include=QVS\Deputado\Federal\Extracao.qvs);
+
+DIRECTORY;
+$(Must_Include=QVS\Deputado\Federal\Exportacao.qvs);
+
+
+
+/**
+ExpPontuacao:
+	load 
+	 ExpPontuacao.Cidade,ExpPontuacao.Cargo,ExpPontuacao.DataNascimento,ExpPontuacao.Titulo,
+		ExpPontuacao.AnoEleicao,ExpPontuacao.Sexo,
+		ExpPontuacao.nome,ExpPontuacao.uf,ExpPontuacao.Partido,
+		ExpPontuacao.TituloPolitico  ,ExpPontuacao.total ,ExpPontuacao.Ultimo  , ExpPontuacao.Tendencia ,
+		 ExpPontuacao.Tendencia / ExpPontuacao.Ultimo  as ExpPontuacao.TendenciaPorcentagem
+	  FROM qvd\transformador\ExpPontuacao.qvd (qvd);
+
+store ExpPontuacao into [qvd\transformador\ExpPontuacao.csv] (txt);
+**/
+//	drop table Candidaturas;
+//	drop table Deputados;
+//	drop table Presenca;

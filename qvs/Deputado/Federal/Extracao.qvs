@@ -1,0 +1,26 @@
+
+IF  '$(ExtracaoDespesa)'='T' THEN
+	DIRECTORY;
+	$(Must_Include=QVS\Deputado\Federal\ExtracaoDespesa.qvs);
+ENDIF
+
+IF  '$(ExtracaoPresenca)'='T' THEN
+	DIRECTORY;
+	$(Must_Include=QVS\Deputado\Federal\ExtracaoPresenca.qvs);
+ENDIF
+
+IF  '$(ExtracaoProposicao)'='T' THEN
+	DIRECTORY;
+	$(Must_Include=QVS\Deputado\Federal\ExtracaoProposicao.qvs);
+ENDIF
+
+IF  '$(ExtracaoVotacao)'='T' THEN
+	DIRECTORY;
+	$(Must_Include=QVS\Deputado\Federal\ExtracaoVotacao.qvs);
+ENDIF
+
+IF  '$(ExtracaoProcessos)'='T' THEN
+	DIRECTORY;
+	$(Must_Include=QVS\Deputado\Federal\ExtracaoProcessos.qvs);
+ENDIF
+	

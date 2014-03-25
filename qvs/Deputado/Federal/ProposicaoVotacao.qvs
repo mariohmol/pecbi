@@ -1,0 +1,56 @@
+/**		// Start of [ObterVotacaoProposicao?tipo=PL&numero=1992&ano=2007.asmx/obtervotacaoproposicao?tipo=pl&numero=1992&ano=2007] LOAD statements
+bancada:
+LOAD Sigla,
+    orientacao,
+    %Key_Votacao_F7152F3C01FFE75C    // Key to parent table: proposicao/Votacoes/Votacao
+FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ObterVotacaoProposicao?tipo=PL&numero=1992&ano=2007] (XmlSimple, Table is [proposicao/Votacoes/Votacao/orientacaoBancada/bancada]);
+**/
+
+
+
+LET rowText = NoOfRows('Proposicao'); // get the total number of rows in Timeline table
+
+   
+Set ErrorMode = 0;
+for i=1 to $(rowText) // loop through every row
+
+          let text = FieldValue('id',$(i)); //get the value for "text" field on each row
+          
+ProposicaoVotacao:
+LOAD Nome,
+    Partido,
+    UF,
+    Voto,
+    %Key_Votacao_F7152F3C01FFE75C    // Key to parent table: proposicao/Votacoes/Votacao
+FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ObterVotacaoProposicao?tipo=PL&numero=$(text)&ano=2013] (XmlSimple, Table is [proposicao/Votacoes/Votacao/votos/Deputado]);
+
+NEXT i
+
+store ProposicaoVotacao into [qvd\transformador\ProposicaoVotacao.qvd];
+
+/**
+Votacao:
+LOAD Resumo,
+    Data,
+    Hora,
+    ObjVotacao,
+    %Key_proposicao_3A3C13BE90F56BDA,    // Key to parent table: proposicao
+    %Key_Votacao_F7152F3C01FFE75C    // Key for this table: proposicao/Votacoes/Votacao
+FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ObterVotacaoProposicao?tipo=PL&numero=1992&ano=2007] (XmlSimple, Table is [proposicao/Votacoes/Votacao]);
+
+proposicao:
+LOAD Sigla,
+    Numero,
+    Ano,
+    %Key_proposicao_3A3C13BE90F56BDA    // Key for this table: proposicao
+FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ObterVotacaoProposicao?tipo=PL&numero=1992&ano=2007] (XmlSimple, Table is [proposicao]);
+// End of [ObterVotacaoProposicao?tipo=PL&numero=1992&ano=2007.asmx/obtervotacaoproposicao?tipo=pl&numero=1992&ano=2007] LOAD statements
+
+**/
+
+
+		
+		
+		//let z=date($(i),'DD/MM/YYYY'); // i had to put this line to didnt have problems with the file name.
+		//let txt=date($(i),'YYYYMMDD');
+	exit Script;
