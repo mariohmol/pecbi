@@ -25,7 +25,7 @@ IF  '$(vPontuacao)'='T' THEN
 		Candidaturas.DESCRICAO_SEXO as ExpPontuacao.Sexo,
 		Candidaturas.NOME_PARTIDO as ExpPontuacao.Partido
 			resident Candidaturas where
-		(Candidaturas.DESC_SIT_TOT_TURNO like 'ELEITO*') and 
+		//(Candidaturas.DESC_SIT_TOT_TURNO like 'ELEITO*') and 
 		(Candidaturas.DESCRICAO_CARGO='DEPUTADO FEDERAL' or Candidaturas.DESCRICAO_CARGO='SENADOR'); 
 
 	//Dados do Deputado
