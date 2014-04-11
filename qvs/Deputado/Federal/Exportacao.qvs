@@ -69,6 +69,9 @@ IF '$(vExportacao)'='T' THEN
 	drop table ExpPartido;
 	drop table ExpPolitico;
 	drop table ExpCandidaturas;
+	
+	
+	
 
 ENDIF
 
@@ -212,6 +215,40 @@ IF  '$(vConvertCSV)'='T' THEN
 	load * from [qvd\transformador\VotacaoDeputado.qvd] (qvd);
 	store ExpVotacaoDeputado into [qvd\exportador\ExpVotacaoDeputado.csv] (utf8, txt);
 	drop table ExpVotacaoDeputado;
+	
+	
+	TramitacaoOrgaoProposicao:
+	LOAD *
+	FROM
+	[F:\Projetos\pecbi\qvd\extrator\TramitacaoOrgaoProposicao-042014.qvd] (qvd);
+	store TramitacaoOrgaoProposicao into [qvd\exportador\TramitacaoOrgaoProposicao.csv] (utf8, txt);
+	drop table TramitacaoOrgaoProposicao;
+
+	TramitacaoOrgaoAcao:
+	LOAD *
+	FROM
+	[F:\Projetos\pecbi\qvd\extrator\TramitacaoOrgaoAcao-042014.qvd] (qvd);
+	store TramitacaoOrgaoAcao into [qvd\exportador\TramitacaoOrgaoAcao.csv] (utf8, txt);
+	drop table TramitacaoOrgaoAcao;
+
+
+
+
+
+	VotacoesProposicoes:
+	load * from [qvd\extrator\VotacoesProposicoes-$(anoTexto).qvd] (qvd);
+	store VotacoesProposicoes into [qvd\exportador\VotacoesProposicoes.csv] (utf8, txt);
+	drop table VotacoesProposicoes;
+
+	PautaComissoes:
+	load * from [qvd\extrator\PautaComissoes-$(mesAno).qvd] (qvd);
+	store PautaComissoes into [qvd\exportador\PautaComissoes.csv] (utf8, txt);
+	drop table PautaComissoes;
+
+	PautaComissoes:
+	load * from [qvd\extrator\PautaComissoes-$(mesAno).qvd] (qvd);
+	store PautaComissoes into [qvd\exportador\ExpVotacaoDeputado.csv] (utf8, txt);
+	drop table PautaComissoes;
 	
 	
 ENDIF

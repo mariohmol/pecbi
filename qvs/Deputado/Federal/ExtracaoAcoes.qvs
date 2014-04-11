@@ -1,0 +1,178 @@
+
+IF  '$(ExtracaoAcoes)'='T' THEN
+
+	
+	/*
+	##############
+	# VOTACOES PROPOSICOES
+	##############
+	*/
+	// Start of [ListarProposicoesVotadasEmPlenario?ano=2013&tipo=.asmx/listarproposicoesvotadasemplenario?ano=2013&tipo=] LOAD statements
+	VotacoesProposicoes:
+	LOAD codProposicao,
+		nomeProposicao,
+		dataVotacao
+	FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarProposicoesVotadasEmPlenario?ano=$(anoTexto)&tipo=] (XmlSimple, Table is [proposicoes/proposicao]);
+	// End of [ListarProposicoesVotadasEmPlenario?ano=2013&tipo=.asmx/listarproposicoesvotadasemplenario?ano=2013&tipo=] LOAD statements
+
+	store VotacoesProposicoes into [qvd\extrator\VotacoesProposicoes-$(anoTexto).qvd];
+	drop table VotacoesProposicoes;
+
+	/*
+	##############
+	# ULTIMOS TRAMITACOES DE PROPOSICOES
+	##############
+	*/
+	// Start of [2014.asmx/listarproposicoestramitadasnoperiodo?dtinicio=10/02/2014&dtfim=11/02/2014] LOAD statements
+	UltimasTramitacoes:
+	LOAD codProposicao as UltimasTramitacoes.codProposicao,
+		tipoProposicao as UltimasTramitacoes.tipoProposicao,
+		numero as UltimasTramitacoes.numero,
+		ano as UltimasTramitacoes.ano
+	FROM [http://www.camara.gov.br/SitCamaraWS/Proposicoes.asmx/ListarProposicoesTramitadasNoPeriodo?dtInicio=$(inicioTexto)&dtFim=$(fimTexto)] (XmlSimple, Table is [proposicoes/proposicao]);
+	// End of [2014.asmx/listarproposicoestramitadasnoperiodo?dtinicio=10/02/2014&dtfim=11/02/2014] LOAD statements
+	store UltimasTramitacoes into [qvd\extrator\UltimasTramitacoes-$(mesAno).qvd];
+	
+	
+	/*
+	##############
+	# PAUTA REUNIAO ORGAOS
+	##############
+	*/
+	// Start of [2012.asmx/obterpauta?idorgao=2004&datini=01/01/2012&datfim=30/04/2012] LOAD statements
+	PautaComissoes:
+	LOAD sigla,
+		idProposicao,
+		ementa,
+		resultado,
+		%Key_reuniao_045908D77223287D    // Key to parent table: pauta/reuniao
+	FROM [http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterPauta?IDOrgao=2004&datIni=$(inicioTexto)&datFim=$(fimTexto)] (XmlSimple, Table is [pauta/reuniao/proposicoes/proposicao]);
+
+	left join(PautaComissoes)
+	LOAD codReuniao,
+		data,
+		horario,
+		local,
+		estado,
+		tipo,
+		tituloReuniao,
+		objeto,
+		%Key_pauta_319BDB27DA4ADADD,    // Key to parent table: pauta
+		%Key_reuniao_045908D77223287D    // Key for this table: pauta/reuniao
+	FROM [http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterPauta?IDOrgao=2004&datIni=$(inicioTexto)&datFim=$(fimTexto)] (XmlSimple, Table is [pauta/reuniao]);
+
+	left join(PautaComissoes)
+	LOAD orgao,
+		dataInicial,
+		dataFinal,
+		%Key_pauta_319BDB27DA4ADADD    // Key for this table: pauta
+	FROM [http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterPauta?IDOrgao=2004&datIni=$(inicioTexto)&datFim=$(fimTexto)] (XmlSimple, Table is [pauta]);
+	// End of [2012.asmx/obterpauta?idorgao=2004&datini=01/01/2012&datfim=30/04/2012] LOAD statements
+
+	store PautaComissoes into [qvd\extrator\PautaComissoes-$(mesAno).qvd];
+	drop table PautaComissoes;
+	//exit script;
+	concatenate
+	
+	TRACE --- TRAMITACAO NOS ORGAOS PROPOSICAO ---;
+	LET rowText = NoOfRows('UltimasTramitacoes'); // get the total number of rows in Timeline table	   
+	//	- load *  FROM qvd\transformador\TipoProposicao.qvd (qvd)  where TipoProposicao.ativa='True' and TipoProposicao.tipoSigla<>'';
+	Set ErrorMode = 0;
+	for i=0 to $(rowText)-1 // loop through every row
+
+		//let codProposicao = FieldValue('UltimasTramitacoes.codProposicao',$(i)+1);
+		//let tipoProposicao = FieldValue('UltimasTramitacoes.tipoProposicao',$(i)+1);
+		//let numero = FieldValue('UltimasTramitacoes.numero',$(i)+1);
+		//let anoProposicao = FieldValue('UltimasTramitacoes.ano',$(i)+1);
+		
+		LET codProposicao = Peek('UltimasTramitacoes.codProposicao', $(i), 'UltimasTramitacoes');
+		LET tipoProposicao = Peek('UltimasTramitacoes.tipoProposicao', $(i), 'UltimasTramitacoes');
+		LET numero = Peek('UltimasTramitacoes.numero', $(i), 'UltimasTramitacoes');
+		LET anoProposicao = Peek('UltimasTramitacoes.ano', $(i), 'UltimasTramitacoes');
+		
+		
+		trace 'Passando pela sigla $(codProposicao) $(tipoProposicao) $(numero) $(anoProposicao) ';
+		
+		if i > 3000 then
+			Exit For
+		end if
+		
+		IF  '$(tipoProposicao)'<>'' THEN
+		
+			// Start of [ObterAndamento?sigla=PL&numero=4614&ano=2012&dataIni=&codOrgao=.asmx/obterandamento?sigla=pl&numero=4614&ano=2012&dataini=&codorgao=] LOAD statements
+			TramitacaoOrgaoAcao:
+			LOAD $(tipoProposicao) as sigla,
+				$(numero) as numero,
+				$(anoProposicao) as ano,
+				codOrgao,
+				orgao,
+				descricao,
+				inteiroTeor,
+				%Key_proposicao_3A3C13BE90F56BDA    // Key to parent table: proposicao
+			FROM [http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterAndamento?sigla=$(tipoProposicao)&numero=$(numero)&ano=$(anoProposicao)&dataIni=&codOrgao=] (XmlSimple, Table is [proposicao/andamento/tramitacao]);
+
+			TramitacaoOrgaoProposicao:
+			LOAD tipo,
+				numero,
+				ano,
+				situacao,
+				ementa,
+				idProposicao,
+				[ultimaAcao/tramitacao/data] as [tramitacao/data],
+				[ultimaAcao/tramitacao/codOrgao] as [tramitacao/codOrgao],
+				[ultimaAcao/tramitacao/orgao] as [tramitacao/orgao],
+				[ultimaAcao/tramitacao/descricao] as [tramitacao/descricao],
+				%Key_proposicao_3A3C13BE90F56BDA    // Key for this table: proposicao
+			FROM [http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterAndamento?sigla=$(tipoProposicao)&numero=$(numero)&ano=$(anoProposicao)&dataIni=&codOrgao=] (XmlSimple, Table is [proposicao]);
+			// End of [ObterAndamento?sigla=PL&numero=4614&ano=2012&dataIni=&codOrgao=.asmx/obterandamento?sigla=pl&numero=4614&ano=2012&dataini=&codorgao=] LOAD statements
+				
+	
+			TRACE --- TRAMITACAO NOS ORGAOS [http://www.camara.gov.br/SitCamaraWS/Orgaos.asmx/ObterAndamento?sigla=$(tipoProposicao)&numero=$(numero)&ano=$(anoProposicao)&dataIni=&codOrgao=]  ---;
+		END IF
+		
+	NEXT i
+	
+	TRACE --- TramitacaoOrgao  ---;
+	store TramitacaoOrgaoAcao into [qvd\extrator\TramitacaoOrgaoAcao-$(mesAno).qvd];
+	store TramitacaoOrgaoProposicao into [qvd\extrator\TramitacaoOrgaoProposicao-$(mesAno).qvd];
+	drop table TramitacaoOrgaoAcao;
+	drop table TramitacaoOrgaoProposicao;
+
+	//drop table UltimasTramitacoes;
+	//drop table TramitacaoOrgao;
+	
+	
+	/*
+	##############
+	# ULTIMOS DISCURSOS
+	# 	Em tese podemos obter essas informções em proposicoes do tipo DISC
+	##############
+	
+	// Start of [2012&codigoSessao=&parteNomeParlamentar=&siglaPartido=&siglaUF=.asmx/listardiscursosplenario?dataini=23/11/2012&datafim=23/11/2012&codigosessao=&partenomeparlamentar=&siglapartido=&siglauf=] LOAD statements
+	UltimosDiscursos:
+	LOAD horaInicioDiscurso,
+		numeroQuarto,
+		numeroInsercao,
+		sumario,
+		[orador/numero],
+		[orador/nome] as nome,
+		[orador/partido] as partido,
+		[orador/uf] as uf,
+		%Key_sessao_AA50CF7ECFCEC2BC    // Key to parent table: sessoesDiscursos/sessao
+	FROM [http://www.camara.gov.br/sitcamaraws/SessoesReunioes.asmx/ListarDiscursosPlenario?dataIni=$(inicioTexto)&dataFim=$(fimTexto)&codigoSessao=&parteNomeParlamentar=&siglaPartido=&siglaUF=] (XmlSimple, Table is [sessoesDiscursos/sessao/fasesSessao/faseSessao/discursos/discurso]);
+
+	left join(UltimosDiscursos)
+	LOAD codigo,
+		data,
+		numero,
+		tipo,
+		[fasesSessao/faseSessao/codigo] as [faseSessao/codigo],
+		[fasesSessao/faseSessao/descricao] as descricao,
+		%Key_sessao_AA50CF7ECFCEC2BC    // Key for this table: sessoesDiscursos/sessao
+	FROM [http://www.camara.gov.br/sitcamaraws/SessoesReunioes.asmx/ListarDiscursosPlenario?dataIni=$(inicioTexto)&dataFim=$(fimTexto)&codigoSessao=&parteNomeParlamentar=&siglaPartido=&siglaUF=] (XmlSimple, Table is [sessoesDiscursos/sessao]);
+	// End of [2012&codigoSessao=&parteNomeParlamentar=&siglaPartido=&siglaUF=.asmx/listardiscursosplenario?dataini=23/11/2012&datafim=23/11/2012&codigosessao=&partenomeparlamentar=&siglapartido=&siglauf=] LOAD statements
+
+	store UltimosDiscursos into [qvd\extrator\UltimosDiscursos-$(mesAno).qvd];
+	drop table UltimosDiscursos;
+	*/
+ENDIF

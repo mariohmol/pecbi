@@ -1,0 +1,19 @@
+
+
+IF  '$(TransformadorAcoes)'='T' THEN
+	VotacoesProposicoes:
+		load * from [qvd\extrator\VotacoesProposicoes-$(anoTexto).qvd] (qvd);
+
+	UltimasTramitacoes:
+		load * from [qvd\extrator\UltimasTramitacoes-$(mesAno).qvd](qvd);
+		
+	PautaComissoes:
+		load * from  [qvd\extrator\PautaComissoes-$(mesAno).qvd](qvd);
+	
+	
+	
+	
+ENDIF
+
+
+	

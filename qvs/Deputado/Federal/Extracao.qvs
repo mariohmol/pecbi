@@ -23,4 +23,9 @@ IF  '$(ExtracaoProcessos)'='T' THEN
 	DIRECTORY;
 	$(Must_Include=QVS\Deputado\Federal\ExtracaoProcessos.qvs);
 ENDIF
+
+IF  '$(ExtracaoAcoes)'='T' THEN
+	DIRECTORY;
+	$(Must_Include=QVS\Deputado\Federal\ExtracaoAcoes.qvs);
+ENDIF
 	

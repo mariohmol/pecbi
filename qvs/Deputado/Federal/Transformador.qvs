@@ -301,13 +301,16 @@ IF  '$(vTransformacao)'='T' THEN
 	store VotacaoDeputado into [qvd\transformador\VotacaoDeputado.qvd] (qvd);			
 
 	drop table VotacaoDeputado;
-	
-	
-	
-	
-	
+
 	
 ENDIF
+
+
+IF  '$(TransformadorAcoes)'='T' THEN
+	DIRECTORY;
+	$(Must_Include=QVS\Deputado\Federal\TransformadorAcoes.qvs);
+ENDIF
+	
 
 
 	
