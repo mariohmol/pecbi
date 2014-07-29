@@ -2,7 +2,10 @@
 IF  '$(vExtracao)'='T' THEN
 
 	UNQUALIFY *;
-	drop table ProposicaoExtracao;
+	//drop table ProposicaoExtracao;
+	
+	TipoProposicao:
+	load *  FROM qvd\transformador\TipoProposicao.qvd (qvd);
 	
 	TRACE --- PROPOSICAO - EXTRAIR TODOS POR TIPO DE PROPOSICAO ---;
 	LET rowText = NoOfRows('TipoProposicao'); // get the total number of rows in Timeline table	   
@@ -66,8 +69,10 @@ IF  '$(vExtracao)'='T' THEN
 	store ProposicaoExtracao into [qvd\extrator\ProposicaoCompleta-$(mesAno).qvd];
 	
 	
-		
-	LET rowText = NoOfRows('Proposicao'); // get the total number of rows in Timeline table	   
+	UltimasProposicoes:
+	load * resident Proposicao where Proposicao.datApresentacao >= '$(inicio)';
+	
+	LET rowText = NoOfRows('UltimasProposicoes'); // get the total number of rows in Timeline table	   
 	Set ErrorMode = 0;
 	for i=1 to $(rowText) // loop through every row
 	
